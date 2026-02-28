@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGNAID - Offline Mode</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f253a 0%, #1a3b55 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .offline-container {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(20px);
+      border-radius: 60px;
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 600px;
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    }
+
+    .icon {
+      font-size: 8rem;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 10px 20px #4a9fd0);
+    }
+
+    h1 {
+      color: white;
+      font-size: 3rem;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #fff, #9ac7ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p {
+      color: #c0d8f0;
+      font-size: 1.3rem;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin: 40px 0;
+    }
+
+    .feature {
+      background: rgba(255,255,255,0.05);
+      padding: 20px 10px;
+      border-radius: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .feature span {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .feature p {
+      font-size: 0.9rem;
+      margin: 0;
+      color: #aac9f0;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 18px 40px;
+      border-radius: 50px;
+      background: #2a6b9e;
+      color: white;
+      text-decoration: none;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border: 2px solid #4f9fd0;
+      transition: all 0.3s;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: #1f4f7a;
+      transform: translateY(-3px);
+      box-shadow: 0 15px 30px #0a1f30;
+    }
+
+    .offline-badge {
+      background: #1a3b55;
+      color: #ffaa00;
+      padding: 10px 20px;
+      border-radius: 30px;
+      display: inline-block;
+      margin-top: 30px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-container">
+    <div class="icon">📶</div>
+    <h1>You're Offline</h1>
+    <p>Don't worry! SIGNAID works even without internet. Use cached translations and keep communicating.</p>
+    
+    <div class="features">
+      <div class="feature">
+        <span>🤟</span>
+        <p>Sign Language Models</p>
+      </div>
+      <div class="feature">
+        <span>🗣️</span>
+        <p>Speech Recognition</p>
+      </div>
+      <div class="feature">
+        <span>🌐</span>
+        <p>50+ Languages</p>
+      </div>
+    </div>
+
+    <button class="btn" onclick="retryConnection()">Try Reconnecting</button>
+    
+    <div class="offline-badge">
+      ⚡ Using cached language models
+    </div>
+  </div>
+
+  <script>
+    function retryConnection() {
+      if (navigator.onLine) {
+        window.location.href = '/';
+      } else {
+        alert('Still offline. Please check your internet connection.');
+      }
+    }
+
+    // Listen for online event
+    window.addEventListener('online', () => {
+      window.location.href = '/';
+    });
+
+    // Show cached translations
+    console.log('SIGNAID offline mode active - using cached translations');
+  </script>
+</body>
+</html>
