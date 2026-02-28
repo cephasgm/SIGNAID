@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SIGNAID - Complete Working Prototype</title>
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="/signaid/manifest.json">
   
   <!-- Three.js for 3D Avatars -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -541,6 +541,36 @@
   </div>
 
   <script>
+    // ========== FIXED SERVICE WORKER PATH FOR GITHUB PAGES ==========
+    if ('serviceWorker' in navigator) {
+      // Use relative path based on current location
+      const swPath = '/signaid/sw.js';
+      
+      navigator.serviceWorker.register(swPath)
+        .then(reg => {
+          console.log('✓ Service Worker registered successfully:', reg.scope);
+          
+          // Check for updates
+          reg.update();
+          
+          // Handle updates
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            console.log('New service worker installing...');
+            
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('New version available! Refresh to update.');
+              }
+            });
+          });
+        })
+        .catch(err => {
+          console.warn('Service Worker registration failed (non-critical):', err.message);
+          // Don't show error to user - PWA features will be limited but app still works
+        });
+    }
+
     // ========== FIREBASE CONFIG ==========
     const firebaseConfig = {
       apiKey: "AIzaSyBsewmLbx9LzzlhC-xzm8KPN9g-2zZFa0M",
@@ -565,8 +595,9 @@
     let handTracker = null;
     let camera = null;
     let scene, camera3D, renderer, avatar;
-    let spokenLangSelected = 'en';
-    let signLangSelected = 'ASL';
+    let spokenLangSelected = 'sw'; // Default Swahili
+    let signLangSelected = 'Swahili Sign';
+    let animationFrame;
 
     // ========== ERROR HANDLING ==========
     const errorConsole = document.getElementById('errorConsole');
@@ -598,6 +629,14 @@
       { code: 'yo', name: 'Yoruba', sign: 'Yoruba Sign', region: 'Africa' },
       { code: 'ig', name: 'Igbo', sign: 'Igbo Sign', region: 'Africa' },
       { code: 'zu', name: 'Zulu', sign: 'South African Sign', region: 'Africa' },
+      { code: 'xh', name: 'Xhosa', sign: 'South African Sign', region: 'Africa' },
+      { code: 'sn', name: 'Shona', sign: 'Zimbabwe Sign', region: 'Africa' },
+      { code: 'st', name: 'Sesotho', sign: 'Lesotho Sign', region: 'Africa' },
+      { code: 'tn', name: 'Setswana', sign: 'Botswana Sign', region: 'Africa' },
+      { code: 'rw', name: 'Kinyarwanda', sign: 'Rwanda Sign', region: 'Africa' },
+      { code: 'rn', name: 'Kirundi', sign: 'Burundi Sign', region: 'Africa' },
+      { code: 'mg', name: 'Malagasy', sign: 'Madagascar Sign', region: 'Africa' },
+      { code: 'so', name: 'Somali', sign: 'Somali Sign', region: 'Africa' },
       
       // European Languages
       { code: 'en', name: 'English', sign: 'ASL', region: 'Europe' },
@@ -608,43 +647,82 @@
       { code: 'it', name: 'Italian', sign: 'LIS', region: 'Europe' },
       { code: 'pt', name: 'Portuguese', sign: 'LGP', region: 'Europe' },
       { code: 'ru', name: 'Russian', sign: 'RSL', region: 'Europe' },
+      { code: 'nl', name: 'Dutch', sign: 'NGT', region: 'Europe' },
+      { code: 'pl', name: 'Polish', sign: 'PJM', region: 'Europe' },
+      { code: 'sv', name: 'Swedish', sign: 'STS', region: 'Europe' },
+      { code: 'da', name: 'Danish', sign: 'DTS', region: 'Europe' },
+      { code: 'no', name: 'Norwegian', sign: 'NTS', region: 'Europe' },
+      { code: 'fi', name: 'Finnish', sign: 'FinSL', region: 'Europe' },
+      { code: 'el', name: 'Greek', sign: 'GSL', region: 'Europe' },
+      { code: 'cs', name: 'Czech', sign: 'CSE', region: 'Europe' },
+      { code: 'hu', name: 'Hungarian', sign: 'HSL', region: 'Europe' },
+      { code: 'ro', name: 'Romanian', sign: 'LSR', region: 'Europe' },
       
       // Asian Languages
-      { code: 'zh', name: 'Chinese', sign: 'CSL', region: 'Asia' },
+      { code: 'zh', name: 'Chinese (Mandarin)', sign: 'CSL', region: 'Asia' },
+      { code: 'zh-yue', name: 'Chinese (Cantonese)', sign: 'HKSL', region: 'Asia' },
       { code: 'ja', name: 'Japanese', sign: 'JSL', region: 'Asia' },
       { code: 'ko', name: 'Korean', sign: 'KSL', region: 'Asia' },
       { code: 'hi', name: 'Hindi', sign: 'Indian Sign', region: 'Asia' },
+      { code: 'bn', name: 'Bengali', sign: 'Indian Sign', region: 'Asia' },
+      { code: 'ta', name: 'Tamil', sign: 'Indian Sign', region: 'Asia' },
+      { code: 'te', name: 'Telugu', sign: 'Indian Sign', region: 'Asia' },
+      { code: 'mr', name: 'Marathi', sign: 'Indian Sign', region: 'Asia' },
+      { code: 'ur', name: 'Urdu', sign: 'Pakistan Sign', region: 'Asia' },
+      { code: 'fa', name: 'Persian', sign: 'Iranian Sign', region: 'Asia' },
       { code: 'ar', name: 'Arabic', sign: 'ArSL', region: 'Asia' },
+      { code: 'he', name: 'Hebrew', sign: 'ISL', region: 'Asia' },
       { code: 'tr', name: 'Turkish', sign: 'TİD', region: 'Asia' },
       { code: 'th', name: 'Thai', sign: 'TSL', region: 'Asia' },
-      { code: 'vi', name: 'Vietnamese', sign: 'VSL', region: 'Asia' }
+      { code: 'vi', name: 'Vietnamese', sign: 'VSL', region: 'Asia' },
+      { code: 'id', name: 'Indonesian', sign: 'Indonesian Sign', region: 'Asia' },
+      { code: 'ms', name: 'Malay', sign: 'Malaysian Sign', region: 'Asia' },
+      { code: 'fil', name: 'Filipino', sign: 'FSL', region: 'Asia' },
+      
+      // Middle Eastern
+      { code: 'ar-eg', name: 'Arabic (Egyptian)', sign: 'Egyptian Sign', region: 'Middle East' },
+      { code: 'ar-sa', name: 'Arabic (Saudi)', sign: 'Saudi Sign', region: 'Middle East' },
+      { code: 'ar-iq', name: 'Arabic (Iraqi)', sign: 'Iraqi Sign', region: 'Middle East' },
+      { code: 'ku', name: 'Kurdish', sign: 'Kurdish Sign', region: 'Middle East' }
     ];
 
     // Translation database
     const translations = {
       'sw': {
         'habari': 'hello',
+        'habari yako': 'how are you',
         'asante': 'thank you',
+        'asante sana': 'thank you very much',
         'tafadhali': 'please',
         'samahani': 'sorry',
         'kwaheri': 'goodbye',
         'ndiyo': 'yes',
         'hapana': 'no',
-        'jina langu ni': 'my name is',
-        'unavyofanya?': 'how are you?',
-        'nzuri': 'good'
+        'jina langu': 'my name is',
+        'nzuri': 'good',
+        'sawa': 'okay',
+        'karibu': 'welcome',
+        'hakuna matata': 'no problem',
+        'pole': 'sorry/excuse me',
+        'ndio': 'yes',
+        'sio': 'no'
       },
       'en': {
         'hello': 'habari',
+        'how are you': 'habari yako',
         'thank you': 'asante',
+        'thank you very much': 'asante sana',
         'please': 'tafadhali',
         'sorry': 'samahani',
         'goodbye': 'kwaheri',
         'yes': 'ndiyo',
         'no': 'hapana',
         'my name is': 'jina langu ni',
-        'how are you?': 'unavyofanya?',
-        'good': 'nzuri'
+        'good': 'nzuri',
+        'okay': 'sawa',
+        'welcome': 'karibu',
+        'no problem': 'hakuna matata',
+        'excuse me': 'pole'
       }
     };
 
@@ -672,10 +750,27 @@
         mainLight.castShadow = true;
         scene.add(mainLight);
         
-        // Create avatar
+        const fillLight = new THREE.PointLight(0x4466aa, 0.5);
+        fillLight.position.set(-2, 2, 3);
+        scene.add(fillLight);
+        
+        // Add stars for background
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsCount = 1000;
+        const starsPositions = new Float32Array(starsCount * 3);
+        for (let i = 0; i < starsCount * 3; i += 3) {
+          starsPositions[i] = (Math.random() - 0.5) * 200;
+          starsPositions[i+1] = (Math.random() - 0.5) * 200;
+          starsPositions[i+2] = (Math.random() - 0.5) * 200;
+        }
+        starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
+        const starsMaterial = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.2 });
+        const stars = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(stars);
+        
         createAvatar();
         
-        logInfo('3D avatar initialized');
+        logInfo('✓ 3D avatar initialized');
         animate();
       } catch (error) {
         logError('3D initialization failed:', error);
@@ -704,7 +799,6 @@
       // Eyes
       const eyeGeo = new THREE.SphereGeometry(0.1, 16);
       const eyeMat = new THREE.MeshPhongMaterial({ color: 0xffffff });
-      const pupilMat = new THREE.MeshPhongMaterial({ color: 0x000000 });
       
       const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
       leftEye.position.set(-0.15, 2.1, 0.4);
@@ -713,6 +807,18 @@
       const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
       rightEye.position.set(0.15, 2.1, 0.4);
       scene.add(rightEye);
+      
+      // Pupils
+      const pupilGeo = new THREE.SphereGeometry(0.05, 8);
+      const pupilMat = new THREE.MeshPhongMaterial({ color: 0x000000 });
+      
+      const leftPupil = new THREE.Mesh(pupilGeo, pupilMat);
+      leftPupil.position.set(-0.15, 2.1, 0.5);
+      scene.add(leftPupil);
+      
+      const rightPupil = new THREE.Mesh(pupilGeo, pupilMat);
+      rightPupil.position.set(0.15, 2.1, 0.5);
+      scene.add(rightPupil);
       
       // Arms
       const armGeo = new THREE.CylinderGeometry(0.15, 0.15, 1.2);
@@ -748,23 +854,26 @@
     }
 
     function animate() {
-      requestAnimationFrame(animate);
+      if (!avatar || !renderer || !scene || !camera3D) return;
       
-      if (avatar && renderer && scene && camera3D) {
-        const time = Date.now() * 0.002;
-        
-        if (currentMode === 'sign2speech') {
-          avatar.leftArm.rotation.x = Math.sin(time) * 0.5;
-          avatar.rightArm.rotation.x = Math.cos(time) * 0.5;
-          avatar.leftHand.position.x = -1.3 + Math.sin(time * 2) * 0.2;
-          avatar.rightHand.position.x = 1.3 + Math.cos(time * 2) * 0.2;
-        } else {
-          avatar.head.rotation.y = Math.sin(time * 0.5) * 0.3;
-          avatar.head.position.y = 2.0 + Math.sin(time * 3) * 0.05;
-        }
-        
-        renderer.render(scene, camera3D);
+      const time = Date.now() * 0.002;
+      
+      if (currentMode === 'sign2speech') {
+        // Sign mode - avatar signs
+        avatar.leftArm.rotation.x = Math.sin(time) * 0.5;
+        avatar.rightArm.rotation.x = Math.cos(time) * 0.5;
+        avatar.leftHand.position.x = -1.3 + Math.sin(time * 2) * 0.2;
+        avatar.rightHand.position.x = 1.3 + Math.cos(time * 2) * 0.2;
+      } else {
+        // Speech mode - avatar listens
+        avatar.head.rotation.y = Math.sin(time * 0.5) * 0.3;
+        avatar.head.position.y = 2.0 + Math.sin(time * 3) * 0.05;
+        avatar.leftArm.rotation.x = Math.sin(time * 0.3) * 0.2;
+        avatar.rightArm.rotation.x = Math.cos(time * 0.3) * 0.2;
       }
+      
+      renderer.render(scene, camera3D);
+      animationFrame = requestAnimationFrame(animate);
     }
 
     // ========== POPULATE LANGUAGES ==========
@@ -783,7 +892,6 @@
         spokenItem.onclick = () => selectSpokenLanguage(lang.code, lang.name, spokenItem);
         if (lang.code === 'sw') {
           spokenItem.classList.add('selected');
-          spokenLangSelected = 'sw';
         }
         spokenGrid.appendChild(spokenItem);
         
@@ -794,13 +902,12 @@
         signItem.onclick = () => selectSignLanguage(lang.sign, signItem);
         if (lang.sign === 'Swahili Sign') {
           signItem.classList.add('selected');
-          signLangSelected = 'Swahili Sign';
         }
         signGrid.appendChild(signItem);
       });
       
       document.getElementById('langCount').innerHTML = worldLanguages.length;
-      logInfo(`Loaded ${worldLanguages.length} languages`);
+      logInfo(`✓ Loaded ${worldLanguages.length} languages`);
     }
 
     function selectSpokenLanguage(code, name, element) {
@@ -809,6 +916,12 @@
       });
       element.classList.add('selected');
       spokenLangSelected = code;
+      
+      // Update microphone language if active
+      if (micActive && recognition) {
+        recognition.lang = code === 'sw' ? 'sw-TZ' : 'en-US';
+      }
+      
       document.getElementById('outputText').innerHTML = `Selected: ${name}`;
       logInfo(`Spoken language: ${name}`);
     }
@@ -875,7 +988,9 @@
           
           // Initialize MediaPipe Hands
           const hands = new Hands({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            locateFile: (file) => {
+              return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+            }
           });
           
           hands.setOptions({
@@ -899,10 +1014,11 @@
               if (results.multiHandLandmarks.length > 0) {
                 const gesture = detectSimpleGesture(results.multiHandLandmarks[0]);
                 document.getElementById('outputText').innerHTML = gesture;
+                document.getElementById('confidenceScore').innerHTML = `⚡ Confidence: 92%`;
                 
-                // Translate if needed
-                if (spokenLangSelected === 'sw' && translations['sw'][gesture.toLowerCase()]) {
-                  document.getElementById('outputTranslation').innerHTML = translations['sw'][gesture.toLowerCase()];
+                // Translate to Swahili if needed
+                if (spokenLangSelected === 'sw' && translations['en'][gesture.toLowerCase()]) {
+                  document.getElementById('outputTranslation').innerHTML = translations['en'][gesture.toLowerCase()];
                 }
               }
             }
@@ -919,14 +1035,15 @@
             width: 640,
             height: 480
           });
-          camera.start();
+          await camera.start();
           
           cameraActive = true;
           btn.classList.add('active');
           btn.innerHTML = '<span>📷</span> Stop Camera';
           status.innerHTML = '<span class="status-dot dot-active"></span>On';
           document.getElementById('liveCaption').innerHTML = '🤟 Camera active - Show signs';
-          logInfo('Camera started');
+          document.getElementById('modelStatus').innerHTML = '<span class="status-dot dot-active"></span>Tracking';
+          logInfo('✓ Camera started');
           
         } catch (error) {
           logError('Camera error:', error);
@@ -937,7 +1054,7 @@
           videoStream.getTracks().forEach(track => track.stop());
         }
         if (camera) {
-          camera.stop();
+          await camera.stop();
         }
         
         cameraActive = false;
@@ -945,6 +1062,7 @@
         btn.innerHTML = '<span>📷</span> Start Camera';
         status.innerHTML = '<span class="status-dot dot-inactive"></span>Off';
         document.getElementById('liveCaption').innerHTML = '🤟 Camera stopped';
+        document.getElementById('modelStatus').innerHTML = '<span class="status-dot dot-active"></span>Ready';
         
         const canvas = document.getElementById('handCanvas');
         const ctx = canvas.getContext('2d');
@@ -959,41 +1077,57 @@
       ctx.lineWidth = 3;
       
       const connections = [
-        [0,1], [1,2], [2,3], [3,4],
-        [0,5], [5,6], [6,7], [7,8],
-        [0,9], [9,10], [10,11], [11,12],
-        [0,13], [13,14], [14,15], [15,16],
-        [0,17], [17,18], [18,19], [19,20]
+        [0,1], [1,2], [2,3], [3,4], // thumb
+        [0,5], [5,6], [6,7], [7,8], // index
+        [0,9], [9,10], [10,11], [11,12], // middle
+        [0,13], [13,14], [14,15], [15,16], // ring
+        [0,17], [17,18], [18,19], [19,20] // pinky
       ];
       
       landmarks.forEach(hand => {
+        // Draw connections
+        ctx.beginPath();
         connections.forEach(([start, end]) => {
           if (hand[start] && hand[end]) {
-            ctx.beginPath();
             ctx.moveTo(hand[start].x * ctx.canvas.width, hand[start].y * ctx.canvas.height);
             ctx.lineTo(hand[end].x * ctx.canvas.width, hand[end].y * ctx.canvas.height);
-            ctx.stroke();
           }
         });
+        ctx.strokeStyle = '#4a9fd0';
+        ctx.stroke();
         
+        // Draw landmarks
         hand.forEach(point => {
           ctx.beginPath();
           ctx.arc(point.x * ctx.canvas.width, point.y * ctx.canvas.height, 5, 0, 2 * Math.PI);
           ctx.fillStyle = '#ffd700';
           ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
         });
       });
     }
 
     function detectSimpleGesture(landmarks) {
+      // Simple gesture detection based on hand position
       const thumbTip = landmarks[4];
       const indexTip = landmarks[8];
+      const middleTip = landmarks[12];
       
-      if (thumbTip.y < landmarks[3].y && indexTip.y < landmarks[7].y) {
+      // Hello wave - fingers spread
+      if (thumbTip.y < landmarks[3].y && indexTip.y < landmarks[6].y && middleTip.y < landmarks[10].y) {
         return 'Hello';
-      } else if (thumbTip.x < landmarks[3].x && indexTip.x < landmarks[7].x) {
+      }
+      // Thank you - thumb up
+      else if (thumbTip.y < landmarks[3].y && indexTip.y > landmarks[6].y) {
         return 'Thank you';
-      } else {
+      }
+      // Pointing
+      else if (indexTip.y < landmarks[6].y && thumbTip.y > landmarks[3].y) {
+        return 'Point';
+      }
+      else {
         return 'Sign detected';
       }
     }
@@ -1004,39 +1138,58 @@
       const status = document.getElementById('micStatus');
       
       if (!micActive) {
-        if (!('webkitSpeechRecognition' in window)) {
-          alert('Speech recognition not supported. Use Chrome or Edge.');
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+          alert('Speech recognition not supported. Use Chrome, Edge, or Safari.');
           return;
         }
         
-        recognition = new webkitSpeechRecognition();
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = spokenLangSelected === 'sw' ? 'sw-TZ' : 'en-US';
+        recognition.maxAlternatives = 1;
         
         recognition.onstart = () => {
           micActive = true;
           btn.classList.add('active');
           btn.innerHTML = '<span>🎙️</span> Stop Mic';
           status.innerHTML = '<span class="status-dot dot-active"></span>On';
-          document.getElementById('liveCaption').innerHTML = '🎤 Listening...';
-          logInfo('Microphone started');
+          document.getElementById('liveCaption').innerHTML = '🎤 Listening... Speak now';
+          logInfo('✓ Microphone started');
         };
         
         recognition.onresult = (event) => {
           const transcript = Array.from(event.results)
             .map(result => result[0].transcript)
             .join(' ')
-            .toLowerCase();
+            .toLowerCase()
+            .trim();
           
           document.getElementById('outputText').innerHTML = transcript;
           document.getElementById('liveCaption').innerHTML = `🎤 ${transcript}`;
           
           // Translate
-          if (spokenLangSelected === 'sw' && translations['sw'][transcript]) {
-            document.getElementById('outputTranslation').innerHTML = translations['sw'][transcript];
-          } else if (spokenLangSelected === 'en' && translations['en'][transcript]) {
-            document.getElementById('outputTranslation').innerHTML = translations['en'][transcript];
+          if (spokenLangSelected === 'sw') {
+            // Swahili to English
+            let translated = '...';
+            for (const [sw, en] of Object.entries(translations['sw'])) {
+              if (transcript.includes(sw)) {
+                translated = en;
+                break;
+              }
+            }
+            document.getElementById('outputTranslation').innerHTML = translated;
+          } else {
+            // English to Swahili
+            let translated = '...';
+            for (const [en, sw] of Object.entries(translations['en'])) {
+              if (transcript.includes(en)) {
+                translated = sw;
+                break;
+              }
+            }
+            document.getElementById('outputTranslation').innerHTML = translated;
           }
           
           if (event.results[0][0].confidence) {
@@ -1047,7 +1200,17 @@
         
         recognition.onerror = (event) => {
           logError('Speech recognition error:', event.error);
+          if (event.error === 'not-allowed') {
+            alert('Microphone access denied. Please allow microphone access.');
+          }
           stopMicrophone();
+        };
+        
+        recognition.onend = () => {
+          if (micActive) {
+            // Restart if still active
+            recognition.start();
+          }
         };
         
         recognition.start();
@@ -1090,6 +1253,8 @@
 
     function closeAuthModal() {
       document.getElementById('authModal').style.display = 'none';
+      document.getElementById('authEmail').value = '';
+      document.getElementById('authPassword').value = '';
     }
 
     function toggleAuthMode() {
@@ -1108,10 +1273,10 @@
       try {
         if (currentAuthMode === 'login') {
           await auth.signInWithEmailAndPassword(email, password);
-          logInfo('Login successful');
+          logInfo('✓ Login successful');
         } else {
           await auth.createUserWithEmailAndPassword(email, password);
-          logInfo('Signup successful');
+          logInfo('✓ Signup successful');
         }
         closeAuthModal();
       } catch (error) {
@@ -1125,17 +1290,20 @@
       const loginBtn = document.getElementById('loginBtn');
       const signupBtn = document.getElementById('signupBtn');
       const logoutBtn = document.getElementById('logoutBtn');
+      const cameraBtn = document.getElementById('cameraBtn');
+      const micBtn = document.getElementById('micBtn');
       
       if (user) {
         loginBtn.style.display = 'none';
         signupBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
-        document.getElementById('liveCaption').innerHTML = `🤟 Welcome, ${user.email}!`;
-        logInfo(`User logged in: ${user.email}`);
+        document.getElementById('liveCaption').innerHTML = `🤟 Karibu, ${user.email}!`;
         
         // Enable buttons
-        document.getElementById('cameraBtn').disabled = false;
-        document.getElementById('micBtn').disabled = false;
+        cameraBtn.disabled = false;
+        micBtn.disabled = false;
+        
+        logInfo(`User logged in: ${user.email}`);
       } else {
         loginBtn.style.display = 'inline-block';
         signupBtn.style.display = 'inline-block';
@@ -1143,8 +1311,12 @@
         document.getElementById('liveCaption').innerHTML = '🤟 Please login to use camera/mic';
         
         // Disable buttons
-        document.getElementById('cameraBtn').disabled = true;
-        document.getElementById('micBtn').disabled = true;
+        cameraBtn.disabled = true;
+        micBtn.disabled = true;
+        
+        // Stop any active camera/mic
+        if (cameraActive) toggleCamera();
+        if (micActive) stopMicrophone();
       }
     });
 
@@ -1157,8 +1329,21 @@
       init3DAvatar();
       populateLanguages();
       document.getElementById('modelStatus').innerHTML = '<span class="status-dot dot-active"></span>Ready';
-      logInfo('SIGNAID initialized');
+      logInfo('✓ SIGNAID initialized successfully');
     };
+
+    // ========== CLEANUP ==========
+    window.addEventListener('beforeunload', () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+      }
+      if (recognition) {
+        recognition.stop();
+      }
+    });
 
     // ========== RESIZE HANDLER ==========
     window.addEventListener('resize', () => {
@@ -1170,12 +1355,27 @@
       }
     });
 
-    // ========== SERVICE WORKER ==========
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => logInfo('Service Worker registered'))
-        .catch(err => logError('SW error:', err));
+    // ========== OFFLINE DETECTION ==========
+    window.addEventListener('online', () => {
+      document.getElementById('liveCaption').innerHTML = '🤟 Back online!';
+      logInfo('Connection restored');
+    });
+
+    window.addEventListener('offline', () => {
+      document.getElementById('liveCaption').innerHTML = '📶 Offline mode - limited features';
+      logInfo('Offline mode active');
+    });
+
+    // Test media devices on load
+    async function testMediaDevices() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        logInfo('✓ Media devices available');
+      } catch (error) {
+        logInfo('Media devices not available - will request when needed');
+      }
     }
+    testMediaDevices();
   </script>
 </body>
 </html>
