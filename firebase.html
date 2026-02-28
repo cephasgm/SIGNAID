@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGNAID - Firebase Auth Helper</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f253a 0%, #1d405e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-container {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(20px);
+      border-radius: 50px;
+      padding: 50px;
+      width: 100%;
+      max-width: 500px;
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 0 30px 50px rgba(0,0,0,0.5);
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff, #9ac7ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 40px;
+    }
+
+    .tab-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background: #1a3650;
+      padding: 5px;
+      border-radius: 40px;
+      margin-bottom: 30px;
+    }
+
+    .tab {
+      padding: 15px;
+      border-radius: 35px;
+      border: none;
+      background: transparent;
+      color: #a0c0e0;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 1.1rem;
+    }
+
+    .tab.active {
+      background: #2a6b9e;
+      color: white;
+      box-shadow: 0 4px 15px #1a3f60;
+    }
+
+    .input-group {
+      margin-bottom: 25px;
+    }
+
+    .input-group label {
+      display: block;
+      color: #aac9f0;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 18px 25px;
+      border-radius: 40px;
+      border: none;
+      background: #1f405e;
+      color: white;
+      font-size: 1.1rem;
+      border: 2px solid #3f7bb3;
+      transition: 0.3s;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: #6ab0ff;
+      box-shadow: 0 0 15px #4a9fd0;
+    }
+
+    .input-group input::placeholder {
+      color: #8bb4db;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 18px;
+      border-radius: 40px;
+      border: none;
+      background: #2a6b9e;
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+      border: 2px solid #4f9fd0;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      background: #1f4f7a;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px #0a1f30;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 25px;
+      color: #aac9f0;
+      font-size: 1rem;
+    }
+
+    .error {
+      color: #ff9999;
+      text-align: center;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 30px;
+      background: rgba(255,0,0,0.1);
+    }
+
+    .success {
+      color: #99ff99;
+      text-align: center;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 30px;
+      background: rgba(0,255,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="logo">SIGN<span style="color: #6ab0ff;">AID</span></div>
+    
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('login')" id="loginTab">Login</button>
+      <button class="tab" onclick="switchTab('signup')" id="signupTab">Sign Up</button>
+    </div>
+
+    <div id="loginForm">
+      <div class="input-group">
+        <label>Email Address</label>
+        <input type="email" id="loginEmail" placeholder="Enter your email">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password">
+      </div>
+      <button class="btn" onclick="handleLogin()">Login to SIGNAID</button>
+      <div class="message">Forgot password? <a href="#" onclick="resetPassword()" style="color: #6ab0ff;">Reset here</a></div>
+    </div>
+
+    <div id="signupForm" style="display: none;">
+      <div class="input-group">
+        <label>Full Name</label>
+        <input type="text" id="signupName" placeholder="Enter your name">
+      </div>
+      <div class="input-group">
+        <label>Email Address</label>
+        <input type="email" id="signupEmail" placeholder="Enter your email">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="Create a password">
+      </div>
+      <div class="input-group">
+        <label>Confirm Password</label>
+        <input type="password" id="signupConfirmPassword" placeholder="Confirm your password">
+      </div>
+      <button class="btn" onclick="handleSignup()">Create Account</button>
+    </div>
+
+    <div id="messageContainer"></div>
+  </div>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBsewmLbx9LzzlhC-xzm8KPN9g-2zZFa0M",
+      authDomain: "signaid-app.firebaseapp.com",
+      projectId: "signaid-app",
+      storageBucket: "signaid-app.firebasestorage.app",
+      messagingSenderId: "520796391275",
+      appId: "1:520796391275:web:748273f6d18765190bae2e",
+      measurementId: "G-J9Q2JRS6WX"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Switch between login and signup
+    window.switchTab = (tab) => {
+      if (tab === 'login') {
+        document.getElementById('loginTab').classList.add('active');
+        document.getElementById('signupTab').classList.remove('active');
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('signupForm').style.display = 'none';
+      } else {
+        document.getElementById('signupTab').classList.add('active');
+        document.getElementById('loginTab').classList.remove('active');
+        document.getElementById('signupForm').style.display = 'block';
+        document.getElementById('loginForm').style.display = 'none';
+      }
+      clearMessage();
+    };
+
+    // Show message
+    const showMessage = (text, isError = true) => {
+      const container = document.getElementById('messageContainer');
+      container.innerHTML = `<div class="${isError ? 'error' : 'success'}">${text}</div>`;
+    };
+
+    const clearMessage = () => {
+      document.getElementById('messageContainer').innerHTML = '';
+    };
+
+    // Handle Login
+    window.handleLogin = async () => {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      if (!email || !password) {
+        showMessage('Please fill in all fields');
+        return;
+      }
+
+      try {
+        const result = await auth.signInWithEmailAndPassword(email, password);
+        showMessage('Login successful! Redirecting...', false);
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      } catch (error) {
+        showMessage(error.message);
+      }
+    };
+
+    // Handle Signup
+    window.handleSignup = async () => {
+      const name = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      const confirmPassword = document.getElementById('signupConfirmPassword').value;
+
+      if (!name || !email || !password || !confirmPassword) {
+        showMessage('Please fill in all fields');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showMessage('Passwords do not match');
+        return;
+      }
+
+      if (password.length < 6) {
+        showMessage('Password must be at least 6 characters');
+        return;
+      }
+
+      try {
+        const result = await auth.createUserWithEmailAndPassword(email, password);
+        await result.user.updateProfile({ displayName: name });
+        showMessage('Account created! Redirecting...', false);
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      } catch (error) {
+        showMessage(error.message);
+      }
+    };
+
+    // Reset Password
+    window.resetPassword = async () => {
+      const email = document.getElementById('loginEmail').value;
+      if (!email) {
+        showMessage('Please enter your email address');
+        return;
+      }
+
+      try {
+        await auth.sendPasswordResetEmail(email);
+        showMessage('Password reset email sent! Check your inbox.', false);
+      } catch (error) {
+        showMessage(error.message);
+      }
+    };
+
+    // Check auth state
+    auth.onAuthStateChanged((user) => {
+      if (user && window.location.pathname !== '/') {
+        // Already logged in, redirect to main app
+        window.location.href = '/';
+      }
+    });
+  </script>
+</body>
+</html>
