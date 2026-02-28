@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIGNAID - Complete Working Prototype</title>
-  <link rel="manifest" href="/signaid/manifest.json">
+  <title>SIGNAID - Sign Language Bridge</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
   
   <!-- Three.js for 3D Avatars -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -12,20 +13,37 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <!-- MediaPipe for Hand Tracking -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.3.1627442132/hands.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1627442132/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     body {
-      background: linear-gradient(135deg, #0a1a2f 0%, #1a3b55 100%);
+      background: linear-gradient(145deg, #0a0f1e 0%, #1a2639 50%, #0f172a 100%);
       min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated background particles */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 80% 70%, rgba(124, 58, 237, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 40% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 90% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 20%);
+      pointer-events: none;
+      z-index: 0;
     }
 
     #app {
@@ -33,30 +51,48 @@
       margin: 0 auto;
       padding: 20px;
       position: relative;
+      z-index: 1;
     }
 
-    /* Navbar */
+    /* Glassmorphism Navbar */
     .navbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 15px 30px;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 50px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 60px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
     }
 
     .logo {
-      font-size: 2rem;
-      font-weight: 700;
-      color: white;
-      text-shadow: 0 2px 10px rgba(74, 159, 208, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .logo span {
-      color: #4a9fd0;
+    .logo img {
+      width: 40px;
+      height: 40px;
+      filter: drop-shadow(0 0 10px #2563eb);
+    }
+
+    .logo-text {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-text span {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .nav-buttons {
@@ -66,53 +102,58 @@
 
     .btn {
       padding: 12px 28px;
-      border-radius: 30px;
+      border-radius: 40px;
       border: none;
       font-weight: 600;
       cursor: pointer;
-      transition: 0.3s;
-      font-size: 1rem;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
     }
 
     .btn-outline {
       background: transparent;
-      border: 2px solid rgba(255, 255, 255, 0.5);
+      border: 2px solid rgba(255, 255, 255, 0.2);
       color: white;
+      backdrop-filter: blur(5px);
     }
 
     .btn-outline:hover {
       background: rgba(255, 255, 255, 0.1);
+      border-color: #2563eb;
+      transform: translateY(-2px);
     }
 
     .btn-primary {
-      background: #2a6b9e;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
       color: white;
-      border: 2px solid #4a9fd0;
+      box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .btn-primary:hover {
-      background: #1f4f7a;
       transform: translateY(-2px);
-      box-shadow: 0 5px 20px rgba(74, 159, 208, 0.4);
+      box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.6);
     }
 
     /* Main Grid */
     .main-grid {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
-      gap: 20px;
+      gap: 25px;
       height: calc(100vh - 120px);
     }
 
-    /* 3D Avatar Panel */
+    /* 3D Avatar Panel with glass effect */
     .avatar-panel {
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(15, 23, 42, 0.5);
       backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border-radius: 40px;
       overflow: hidden;
       position: relative;
-      border: 2px solid rgba(74, 159, 208, 0.3);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
     #avatarCanvas {
@@ -136,142 +177,213 @@
       bottom: 30px;
       left: 30px;
       right: 30px;
-      background: rgba(0, 20, 40, 0.9);
-      backdrop-filter: blur(20px);
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       padding: 20px 30px;
       border-radius: 50px;
       color: white;
       font-size: 1.8rem;
       font-weight: 600;
-      border-left: 5px solid #4a9fd0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
       z-index: 10;
       text-align: center;
+      letter-spacing: 1px;
     }
 
-    /* Control Panel */
+    /* Control Panel - Glass card */
     .control-panel {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(20px);
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border-radius: 40px;
-      padding: 25px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 22px;
       overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-    /* Language Section */
+    /* Language Cards */
     .language-section {
       background: rgba(0, 0, 0, 0.3);
       border-radius: 30px;
-      padding: 20px;
+      padding: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .section-title {
-      color: #aac9f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #94a3b8;
       margin-bottom: 15px;
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 600;
       text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .section-title img {
+      width: 20px;
+      height: 20px;
+      opacity: 0.7;
     }
 
     .search-box {
       width: 100%;
-      padding: 12px 20px;
-      border-radius: 30px;
-      background: #1f405e;
-      border: 1px solid #3f7bb3;
+      padding: 14px 22px;
+      border-radius: 40px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: white;
-      font-size: 1rem;
-      margin-bottom: 15px;
+      font-size: 0.95rem;
+      margin-bottom: 18px;
+      transition: all 0.3s;
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: rgba(37, 99, 235, 0.1);
     }
 
     .search-box::placeholder {
-      color: #8bb4db;
+      color: #64748b;
     }
 
     .language-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      max-height: 150px;
+      gap: 10px;
+      max-height: 160px;
       overflow-y: auto;
-      padding: 5px;
+      padding-right: 5px;
+    }
+
+    .language-grid::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .language-grid::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+
+    .language-grid::-webkit-scrollbar-thumb {
+      background: #2563eb;
+      border-radius: 10px;
     }
 
     .lang-item {
-      padding: 10px;
+      padding: 12px 10px;
       border-radius: 25px;
-      background: rgba(255, 255, 255, 0.05);
-      color: white;
+      background: rgba(255, 255, 255, 0.03);
+      color: #e2e8f0;
       cursor: pointer;
-      transition: 0.2s;
+      transition: all 0.3s;
       text-align: center;
       font-size: 0.9rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(5px);
     }
 
     .lang-item:hover {
-      background: #2a6b9e;
+      background: rgba(37, 99, 235, 0.2);
+      border-color: #2563eb;
       transform: translateY(-2px);
     }
 
     .lang-item.selected {
-      background: #2a6b9e;
-      border: 2px solid #4a9fd0;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      border: none;
+      color: white;
+      box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.5);
     }
 
-    /* Mode Tabs */
+    .lang-item small {
+      display: block;
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-top: 3px;
+    }
+
+    /* Mode Tabs - Glass style */
     .mode-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      background: #0e263a;
-      padding: 5px;
-      border-radius: 40px;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 6px;
+      border-radius: 50px;
     }
 
     .mode-tab {
-      padding: 15px;
-      border-radius: 35px;
+      padding: 16px;
+      border-radius: 45px;
       border: none;
       background: transparent;
-      color: #a0c0e0;
+      color: #94a3b8;
       font-weight: 600;
       cursor: pointer;
-      transition: 0.3s;
+      transition: all 0.3s;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .mode-tab.active {
-      background: #2a6b9e;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
       color: white;
-      box-shadow: 0 0 20px #4a9fd0;
+      box-shadow: 0 10px 20px -5px #2563eb;
     }
 
-    /* Output Area */
+    .mode-tab img {
+      width: 20px;
+      height: 20px;
+      filter: brightness(0) invert(1);
+      opacity: 0.7;
+    }
+
+    .mode-tab.active img {
+      opacity: 1;
+    }
+
+    /* Output Card */
     .output-area {
       background: rgba(0, 0, 0, 0.3);
       border-radius: 30px;
-      padding: 20px;
+      padding: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     #outputText {
-      font-size: 2rem;
+      font-size: 2.2rem;
       color: white;
       margin-bottom: 10px;
       font-weight: 600;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      line-height: 1.3;
     }
 
     #outputTranslation {
-      font-size: 1.3rem;
-      color: #aac9f0;
-      margin-bottom: 10px;
+      font-size: 1.5rem;
+      color: #94a3b8;
+      margin-bottom: 12px;
+      font-style: italic;
     }
 
     #confidenceScore {
-      color: #4caf50;
+      color: #10b981;
       font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
     /* Action Buttons */
@@ -285,31 +397,40 @@
       padding: 18px;
       border-radius: 40px;
       border: none;
-      background: #1f405e;
+      background: rgba(255, 255, 255, 0.03);
       color: white;
       font-size: 1.1rem;
       font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
-      transition: 0.3s;
-      border: 1px solid #3f7bb3;
+      transition: all 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(5px);
     }
 
     .action-btn:hover:not(:disabled) {
-      background: #2a6b9e;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      border-color: transparent;
       transform: translateY(-2px);
+      box-shadow: 0 15px 30px -5px #2563eb;
     }
 
     .action-btn.active {
-      background: #2a6b9e;
-      box-shadow: 0 0 20px #4a9fd0;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      border-color: transparent;
+    }
+
+    .action-btn img {
+      width: 22px;
+      height: 22px;
+      filter: brightness(0) invert(1);
     }
 
     .action-btn:disabled {
-      opacity: 0.5;
+      opacity: 0.3;
       cursor: not-allowed;
     }
 
@@ -317,43 +438,51 @@
     .status-panel {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      gap: 12px;
       background: rgba(0, 0, 0, 0.3);
       border-radius: 30px;
-      padding: 15px;
+      padding: 18px;
     }
 
     .status-item {
       text-align: center;
+      padding: 10px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.02);
     }
 
     .status-label {
-      color: #aac9f0;
-      font-size: 0.8rem;
+      color: #64748b;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       margin-bottom: 5px;
     }
 
     .status-value {
       color: white;
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
     }
 
     .status-dot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       display: inline-block;
-      margin-right: 5px;
     }
 
     .dot-active {
-      background: #4caf50;
-      box-shadow: 0 0 10px #4caf50;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
     }
 
     .dot-inactive {
-      background: #f44336;
+      background: #ef4444;
     }
 
     /* Error Console */
@@ -363,21 +492,35 @@
       left: 20px;
       right: 20px;
       background: rgba(0, 0, 0, 0.9);
-      color: #ff6b6b;
-      padding: 15px;
-      border-radius: 30px;
-      font-family: monospace;
+      backdrop-filter: blur(10px);
+      color: #f87171;
+      padding: 16px 24px;
+      border-radius: 40px;
+      font-family: 'Fira Code', monospace;
       font-size: 0.9rem;
       z-index: 1000;
       display: none;
-      border: 1px solid #ff4444;
+      border: 1px solid #ef4444;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
 
     .error-console.show {
       display: block;
+      animation: slideUp 0.3s ease;
     }
 
-    /* Modal */
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Auth Modal */
     .modal {
       display: none;
       position: fixed;
@@ -385,52 +528,57 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(10px);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(16px);
       align-items: center;
       justify-content: center;
       z-index: 2000;
     }
 
     .modal-content {
-      background: #1e3f5c;
-      padding: 40px;
-      border-radius: 50px;
-      width: 400px;
-      border: 2px solid #4a9fd0;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(20px);
+      padding: 45px;
+      border-radius: 60px;
+      width: 450px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 50px 70px -20px black;
     }
 
     .modal-content h2 {
       color: white;
-      margin-bottom: 25px;
+      margin-bottom: 30px;
       text-align: center;
+      font-size: 2rem;
     }
 
     .modal-content input {
       width: 100%;
-      padding: 15px 20px;
-      margin-bottom: 15px;
-      border-radius: 30px;
+      padding: 16px 22px;
+      margin-bottom: 18px;
+      border-radius: 40px;
       border: none;
-      background: #2d557a;
+      background: rgba(255, 255, 255, 0.05);
       color: white;
       font-size: 1rem;
-      border: 1px solid #4a9fd0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .modal-content input::placeholder {
-      color: #aac9f0;
+    .modal-content input:focus {
+      outline: none;
+      border-color: #2563eb;
     }
 
     .modal-footer {
-      margin-top: 20px;
-      color: #aac9f0;
+      margin-top: 25px;
+      color: #64748b;
       text-align: center;
       cursor: pointer;
+      font-size: 0.95rem;
     }
 
     .modal-footer:hover {
-      color: white;
+      color: #2563eb;
     }
   </style>
 </head>
@@ -438,7 +586,10 @@
   <div id="app">
     <!-- Navbar -->
     <nav class="navbar">
-      <div class="logo">SIGN<span>AID</span></div>
+      <div class="logo">
+        <img src="/icons/icon-192x192.png" alt="SIGNAID">
+        <div class="logo-text">SIGN<span>AID</span></div>
+      </div>
       <div class="nav-buttons">
         <button class="btn btn-outline" id="loginBtn">Login</button>
         <button class="btn btn-primary" id="signupBtn">Sign Up</button>
@@ -452,29 +603,37 @@
       <div class="avatar-panel">
         <canvas id="avatarCanvas"></canvas>
         <canvas id="handCanvas"></canvas>
-        <div class="caption-overlay" id="liveCaption">🤟 Initializing SIGNAID...</div>
+        <div class="caption-overlay" id="liveCaption">🤟 Karibu SIGNAID</div>
       </div>
 
       <!-- Control Panel -->
       <div class="control-panel">
         <!-- Spoken Language -->
         <div class="language-section">
-          <div class="section-title">🗣️ SPOKEN LANGUAGE</div>
+          <div class="section-title">
+            <img src="/icons/icon-72x72.png" alt=""> 🗣️ SPOKEN LANGUAGE
+          </div>
           <input type="text" class="search-box" id="searchSpoken" placeholder="Search language...">
           <div class="language-grid" id="spokenLanguages"></div>
         </div>
 
         <!-- Sign Language -->
         <div class="language-section">
-          <div class="section-title">🤟 SIGN LANGUAGE</div>
+          <div class="section-title">
+            <img src="/icons/icon-72x72.png" alt=""> 🤟 SIGN LANGUAGE
+          </div>
           <input type="text" class="search-box" id="searchSign" placeholder="Search sign language...">
           <div class="language-grid" id="signLanguages"></div>
         </div>
 
         <!-- Mode Tabs -->
         <div class="mode-tabs">
-          <button class="mode-tab active" id="modeSign2Speech">✋ SIGN → 🗣️ SPEECH</button>
-          <button class="mode-tab" id="modeSpeech2Sign">🎤 SPEECH → ✋ SIGN</button>
+          <button class="mode-tab active" id="modeSign2Speech">
+            <img src="/icons/icon-72x72.png" alt=""> SIGN → SPEECH
+          </button>
+          <button class="mode-tab" id="modeSpeech2Sign">
+            <img src="/icons/icon-72x72.png" alt=""> SPEECH → SIGN
+          </button>
         </div>
 
         <!-- Output Area -->
@@ -487,10 +646,10 @@
         <!-- Action Buttons -->
         <div class="action-buttons">
           <button class="action-btn" id="cameraBtn" disabled>
-            <span>📷</span> Start Camera
+            <img src="/icons/icon-72x72.png" alt=""> Start Camera
           </button>
           <button class="action-btn" id="micBtn" disabled>
-            <span>🎙️</span> Start Mic
+            <img src="/icons/icon-72x72.png" alt=""> Start Mic
           </button>
         </div>
 
@@ -499,23 +658,23 @@
           <div class="status-item">
             <div class="status-label">CAMERA</div>
             <div class="status-value" id="cameraStatus">
-              <span class="status-dot dot-inactive"></span>Off
+              <span class="status-dot dot-inactive"></span> Off
             </div>
           </div>
           <div class="status-item">
             <div class="status-label">MIC</div>
             <div class="status-value" id="micStatus">
-              <span class="status-dot dot-inactive"></span>Off
+              <span class="status-dot dot-inactive"></span> Off
             </div>
           </div>
           <div class="status-item">
             <div class="status-label">MODEL</div>
             <div class="status-value" id="modelStatus">
-              <span class="status-dot dot-inactive"></span>Loading
+              <span class="status-dot dot-active"></span> Ready
             </div>
           </div>
           <div class="status-item">
-            <div class="status-label">LANGUAGES</div>
+            <div class="status-label">LANGS</div>
             <div class="status-value" id="langCount">0</div>
           </div>
         </div>
@@ -541,36 +700,6 @@
   </div>
 
   <script>
-    // ========== FIXED SERVICE WORKER PATH FOR GITHUB PAGES ==========
-    if ('serviceWorker' in navigator) {
-      // Use relative path based on current location
-      const swPath = '/signaid/sw.js';
-      
-      navigator.serviceWorker.register(swPath)
-        .then(reg => {
-          console.log('✓ Service Worker registered successfully:', reg.scope);
-          
-          // Check for updates
-          reg.update();
-          
-          // Handle updates
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            console.log('New service worker installing...');
-            
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('New version available! Refresh to update.');
-              }
-            });
-          });
-        })
-        .catch(err => {
-          console.warn('Service Worker registration failed (non-critical):', err.message);
-          // Don't show error to user - PWA features will be limited but app still works
-        });
-    }
-
     // ========== FIREBASE CONFIG ==========
     const firebaseConfig = {
       apiKey: "AIzaSyBsewmLbx9LzzlhC-xzm8KPN9g-2zZFa0M",
@@ -581,7 +710,6 @@
       appId: "1:520796391275:web:748273f6d18765190bae2e"
     };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
@@ -595,9 +723,8 @@
     let handTracker = null;
     let camera = null;
     let scene, camera3D, renderer, avatar;
-    let spokenLangSelected = 'sw'; // Default Swahili
+    let spokenLangSelected = 'sw';
     let signLangSelected = 'Swahili Sign';
-    let animationFrame;
 
     // ========== ERROR HANDLING ==========
     const errorConsole = document.getElementById('errorConsole');
@@ -629,14 +756,6 @@
       { code: 'yo', name: 'Yoruba', sign: 'Yoruba Sign', region: 'Africa' },
       { code: 'ig', name: 'Igbo', sign: 'Igbo Sign', region: 'Africa' },
       { code: 'zu', name: 'Zulu', sign: 'South African Sign', region: 'Africa' },
-      { code: 'xh', name: 'Xhosa', sign: 'South African Sign', region: 'Africa' },
-      { code: 'sn', name: 'Shona', sign: 'Zimbabwe Sign', region: 'Africa' },
-      { code: 'st', name: 'Sesotho', sign: 'Lesotho Sign', region: 'Africa' },
-      { code: 'tn', name: 'Setswana', sign: 'Botswana Sign', region: 'Africa' },
-      { code: 'rw', name: 'Kinyarwanda', sign: 'Rwanda Sign', region: 'Africa' },
-      { code: 'rn', name: 'Kirundi', sign: 'Burundi Sign', region: 'Africa' },
-      { code: 'mg', name: 'Malagasy', sign: 'Madagascar Sign', region: 'Africa' },
-      { code: 'so', name: 'Somali', sign: 'Somali Sign', region: 'Africa' },
       
       // European Languages
       { code: 'en', name: 'English', sign: 'ASL', region: 'Europe' },
@@ -647,82 +766,43 @@
       { code: 'it', name: 'Italian', sign: 'LIS', region: 'Europe' },
       { code: 'pt', name: 'Portuguese', sign: 'LGP', region: 'Europe' },
       { code: 'ru', name: 'Russian', sign: 'RSL', region: 'Europe' },
-      { code: 'nl', name: 'Dutch', sign: 'NGT', region: 'Europe' },
-      { code: 'pl', name: 'Polish', sign: 'PJM', region: 'Europe' },
-      { code: 'sv', name: 'Swedish', sign: 'STS', region: 'Europe' },
-      { code: 'da', name: 'Danish', sign: 'DTS', region: 'Europe' },
-      { code: 'no', name: 'Norwegian', sign: 'NTS', region: 'Europe' },
-      { code: 'fi', name: 'Finnish', sign: 'FinSL', region: 'Europe' },
-      { code: 'el', name: 'Greek', sign: 'GSL', region: 'Europe' },
-      { code: 'cs', name: 'Czech', sign: 'CSE', region: 'Europe' },
-      { code: 'hu', name: 'Hungarian', sign: 'HSL', region: 'Europe' },
-      { code: 'ro', name: 'Romanian', sign: 'LSR', region: 'Europe' },
       
       // Asian Languages
-      { code: 'zh', name: 'Chinese (Mandarin)', sign: 'CSL', region: 'Asia' },
-      { code: 'zh-yue', name: 'Chinese (Cantonese)', sign: 'HKSL', region: 'Asia' },
+      { code: 'zh', name: 'Chinese', sign: 'CSL', region: 'Asia' },
       { code: 'ja', name: 'Japanese', sign: 'JSL', region: 'Asia' },
       { code: 'ko', name: 'Korean', sign: 'KSL', region: 'Asia' },
       { code: 'hi', name: 'Hindi', sign: 'Indian Sign', region: 'Asia' },
-      { code: 'bn', name: 'Bengali', sign: 'Indian Sign', region: 'Asia' },
-      { code: 'ta', name: 'Tamil', sign: 'Indian Sign', region: 'Asia' },
-      { code: 'te', name: 'Telugu', sign: 'Indian Sign', region: 'Asia' },
-      { code: 'mr', name: 'Marathi', sign: 'Indian Sign', region: 'Asia' },
-      { code: 'ur', name: 'Urdu', sign: 'Pakistan Sign', region: 'Asia' },
-      { code: 'fa', name: 'Persian', sign: 'Iranian Sign', region: 'Asia' },
       { code: 'ar', name: 'Arabic', sign: 'ArSL', region: 'Asia' },
-      { code: 'he', name: 'Hebrew', sign: 'ISL', region: 'Asia' },
       { code: 'tr', name: 'Turkish', sign: 'TİD', region: 'Asia' },
       { code: 'th', name: 'Thai', sign: 'TSL', region: 'Asia' },
-      { code: 'vi', name: 'Vietnamese', sign: 'VSL', region: 'Asia' },
-      { code: 'id', name: 'Indonesian', sign: 'Indonesian Sign', region: 'Asia' },
-      { code: 'ms', name: 'Malay', sign: 'Malaysian Sign', region: 'Asia' },
-      { code: 'fil', name: 'Filipino', sign: 'FSL', region: 'Asia' },
-      
-      // Middle Eastern
-      { code: 'ar-eg', name: 'Arabic (Egyptian)', sign: 'Egyptian Sign', region: 'Middle East' },
-      { code: 'ar-sa', name: 'Arabic (Saudi)', sign: 'Saudi Sign', region: 'Middle East' },
-      { code: 'ar-iq', name: 'Arabic (Iraqi)', sign: 'Iraqi Sign', region: 'Middle East' },
-      { code: 'ku', name: 'Kurdish', sign: 'Kurdish Sign', region: 'Middle East' }
+      { code: 'vi', name: 'Vietnamese', sign: 'VSL', region: 'Asia' }
     ];
 
-    // Translation database
+    // Translation database - Swahili ↔ English with sign mapping
     const translations = {
       'sw': {
-        'habari': 'hello',
-        'habari yako': 'how are you',
-        'asante': 'thank you',
-        'asante sana': 'thank you very much',
-        'tafadhali': 'please',
-        'samahani': 'sorry',
-        'kwaheri': 'goodbye',
-        'ndiyo': 'yes',
-        'hapana': 'no',
-        'jina langu': 'my name is',
-        'nzuri': 'good',
-        'sawa': 'okay',
-        'karibu': 'welcome',
-        'hakuna matata': 'no problem',
-        'pole': 'sorry/excuse me',
-        'ndio': 'yes',
-        'sio': 'no'
+        'habari': { en: 'hello', sign: 'Swahili Sign - Hello' },
+        'asante': { en: 'thank you', sign: 'Swahili Sign - Thank You' },
+        'tafadhali': { en: 'please', sign: 'Swahili Sign - Please' },
+        'samahani': { en: 'sorry', sign: 'Swahili Sign - Sorry' },
+        'kwaheri': { en: 'goodbye', sign: 'Swahili Sign - Goodbye' },
+        'ndiyo': { en: 'yes', sign: 'Swahili Sign - Yes' },
+        'hapana': { en: 'no', sign: 'Swahili Sign - No' },
+        'jina langu ni': { en: 'my name is', sign: 'Swahili Sign - My Name Is' },
+        'unavyofanya?': { en: 'how are you?', sign: 'Swahili Sign - How Are You' },
+        'nzuri': { en: 'good', sign: 'Swahili Sign - Good' }
       },
       'en': {
-        'hello': 'habari',
-        'how are you': 'habari yako',
-        'thank you': 'asante',
-        'thank you very much': 'asante sana',
-        'please': 'tafadhali',
-        'sorry': 'samahani',
-        'goodbye': 'kwaheri',
-        'yes': 'ndiyo',
-        'no': 'hapana',
-        'my name is': 'jina langu ni',
-        'good': 'nzuri',
-        'okay': 'sawa',
-        'welcome': 'karibu',
-        'no problem': 'hakuna matata',
-        'excuse me': 'pole'
+        'hello': { sw: 'habari', sign: 'ASL - Hello' },
+        'thank you': { sw: 'asante', sign: 'ASL - Thank You' },
+        'please': { sw: 'tafadhali', sign: 'ASL - Please' },
+        'sorry': { sw: 'samahani', sign: 'ASL - Sorry' },
+        'goodbye': { sw: 'kwaheri', sign: 'ASL - Goodbye' },
+        'yes': { sw: 'ndiyo', sign: 'ASL - Yes' },
+        'no': { sw: 'hapana', sign: 'ASL - No' },
+        'my name is': { sw: 'jina langu ni', sign: 'ASL - My Name Is' },
+        'how are you?': { sw: 'unavyofanya?', sign: 'ASL - How Are You' },
+        'good': { sw: 'nzuri', sign: 'ASL - Good' }
       }
     };
 
@@ -732,7 +812,7 @@
         const canvas = document.getElementById('avatarCanvas');
         
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a1a2f);
+        scene.background = new THREE.Color(0x0a0f1e);
         
         camera3D = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
         camera3D.position.set(0, 1.5, 5);
@@ -740,6 +820,7 @@
         renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
         renderer.setSize(canvas.clientWidth, canvas.clientHeight);
         renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         
         // Lighting
         const ambientLight = new THREE.AmbientLight(0x404060);
@@ -748,30 +829,18 @@
         const mainLight = new THREE.DirectionalLight(0xffffff, 1);
         mainLight.position.set(2, 5, 5);
         mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 1024;
+        mainLight.shadow.mapSize.height = 1024;
         scene.add(mainLight);
         
         const fillLight = new THREE.PointLight(0x4466aa, 0.5);
         fillLight.position.set(-2, 2, 3);
         scene.add(fillLight);
         
-        // Add stars for background
-        const starsGeometry = new THREE.BufferGeometry();
-        const starsCount = 1000;
-        const starsPositions = new Float32Array(starsCount * 3);
-        for (let i = 0; i < starsCount * 3; i += 3) {
-          starsPositions[i] = (Math.random() - 0.5) * 200;
-          starsPositions[i+1] = (Math.random() - 0.5) * 200;
-          starsPositions[i+2] = (Math.random() - 0.5) * 200;
-        }
-        starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
-        const starsMaterial = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.2 });
-        const stars = new THREE.Points(starsGeometry, starsMaterial);
-        scene.add(stars);
-        
         createAvatar();
-        
-        logInfo('✓ 3D avatar initialized');
         animate();
+        
+        logInfo('3D avatar initialized');
       } catch (error) {
         logError('3D initialization failed:', error);
       }
@@ -808,18 +877,6 @@
       rightEye.position.set(0.15, 2.1, 0.4);
       scene.add(rightEye);
       
-      // Pupils
-      const pupilGeo = new THREE.SphereGeometry(0.05, 8);
-      const pupilMat = new THREE.MeshPhongMaterial({ color: 0x000000 });
-      
-      const leftPupil = new THREE.Mesh(pupilGeo, pupilMat);
-      leftPupil.position.set(-0.15, 2.1, 0.5);
-      scene.add(leftPupil);
-      
-      const rightPupil = new THREE.Mesh(pupilGeo, pupilMat);
-      rightPupil.position.set(0.15, 2.1, 0.5);
-      scene.add(rightPupil);
-      
       // Arms
       const armGeo = new THREE.CylinderGeometry(0.15, 0.15, 1.2);
       const armMat = new THREE.MeshPhongMaterial({ color: 0x2a6b9e });
@@ -854,26 +911,28 @@
     }
 
     function animate() {
-      if (!avatar || !renderer || !scene || !camera3D) return;
+      requestAnimationFrame(animate);
       
-      const time = Date.now() * 0.002;
-      
-      if (currentMode === 'sign2speech') {
-        // Sign mode - avatar signs
-        avatar.leftArm.rotation.x = Math.sin(time) * 0.5;
-        avatar.rightArm.rotation.x = Math.cos(time) * 0.5;
-        avatar.leftHand.position.x = -1.3 + Math.sin(time * 2) * 0.2;
-        avatar.rightHand.position.x = 1.3 + Math.cos(time * 2) * 0.2;
-      } else {
-        // Speech mode - avatar listens
-        avatar.head.rotation.y = Math.sin(time * 0.5) * 0.3;
-        avatar.head.position.y = 2.0 + Math.sin(time * 3) * 0.05;
-        avatar.leftArm.rotation.x = Math.sin(time * 0.3) * 0.2;
-        avatar.rightArm.rotation.x = Math.cos(time * 0.3) * 0.2;
+      if (avatar && renderer && scene && camera3D) {
+        const time = Date.now() * 0.002;
+        
+        if (currentMode === 'sign2speech') {
+          // Sign mode - avatar signs
+          avatar.leftArm.rotation.x = Math.sin(time) * 0.5;
+          avatar.rightArm.rotation.x = Math.cos(time) * 0.5;
+          avatar.leftHand.position.x = -1.3 + Math.sin(time * 2) * 0.2;
+          avatar.rightHand.position.x = 1.3 + Math.cos(time * 2) * 0.2;
+          avatar.head.rotation.y = Math.sin(time * 0.3) * 0.2;
+        } else {
+          // Speech mode - avatar listens
+          avatar.head.rotation.y = Math.sin(time * 0.5) * 0.3;
+          avatar.head.position.y = 2.0 + Math.sin(time * 3) * 0.03;
+          avatar.leftArm.rotation.x = Math.sin(time * 0.5) * 0.2;
+          avatar.rightArm.rotation.x = Math.cos(time * 0.5) * 0.2;
+        }
+        
+        renderer.render(scene, camera3D);
       }
-      
-      renderer.render(scene, camera3D);
-      animationFrame = requestAnimationFrame(animate);
     }
 
     // ========== POPULATE LANGUAGES ==========
@@ -888,7 +947,7 @@
         // Spoken language
         const spokenItem = document.createElement('div');
         spokenItem.className = 'lang-item';
-        spokenItem.innerHTML = `${lang.name} <small style="color: #8bb4db;">${lang.region}</small>`;
+        spokenItem.innerHTML = `${lang.name} <small>${lang.region}</small>`;
         spokenItem.onclick = () => selectSpokenLanguage(lang.code, lang.name, spokenItem);
         if (lang.code === 'sw') {
           spokenItem.classList.add('selected');
@@ -898,7 +957,7 @@
         // Sign language
         const signItem = document.createElement('div');
         signItem.className = 'lang-item';
-        signItem.innerHTML = `${lang.sign} <small style="color: #8bb4db;">${lang.region}</small>`;
+        signItem.innerHTML = `${lang.sign} <small>${lang.region}</small>`;
         signItem.onclick = () => selectSignLanguage(lang.sign, signItem);
         if (lang.sign === 'Swahili Sign') {
           signItem.classList.add('selected');
@@ -907,7 +966,6 @@
       });
       
       document.getElementById('langCount').innerHTML = worldLanguages.length;
-      logInfo(`✓ Loaded ${worldLanguages.length} languages`);
     }
 
     function selectSpokenLanguage(code, name, element) {
@@ -917,12 +975,16 @@
       element.classList.add('selected');
       spokenLangSelected = code;
       
-      // Update microphone language if active
+      // Update mode text
+      if (currentMode === 'speech2sign') {
+        document.getElementById('outputText').innerHTML = `Speak in ${name}`;
+      }
+      
+      // Update speech recognition language
       if (micActive && recognition) {
         recognition.lang = code === 'sw' ? 'sw-TZ' : 'en-US';
       }
       
-      document.getElementById('outputText').innerHTML = `Selected: ${name}`;
       logInfo(`Spoken language: ${name}`);
     }
 
@@ -932,6 +994,11 @@
       });
       element.classList.add('selected');
       signLangSelected = sign;
+      
+      if (currentMode === 'sign2speech') {
+        document.getElementById('outputText').innerHTML = `Show ${sign} signs`;
+      }
+      
       logInfo(`Sign language: ${sign}`);
     }
 
@@ -957,7 +1024,8 @@
       document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
       this.classList.add('active');
       currentMode = 'sign2speech';
-      document.getElementById('outputText').innerHTML = 'Show signs to camera';
+      document.getElementById('outputText').innerHTML = `Show ${signLangSelected} signs`;
+      document.getElementById('outputTranslation').innerHTML = '';
       logInfo('Mode: Sign → Speech');
     });
 
@@ -965,7 +1033,8 @@
       document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
       this.classList.add('active');
       currentMode = 'speech2sign';
-      document.getElementById('outputText').innerHTML = 'Speak into microphone';
+      document.getElementById('outputText').innerHTML = `Speak in ${worldLanguages.find(l => l.code === spokenLangSelected)?.name || 'Swahili'}`;
+      document.getElementById('outputTranslation').innerHTML = '';
       logInfo('Mode: Speech → Sign');
     });
 
@@ -988,9 +1057,7 @@
           
           // Initialize MediaPipe Hands
           const hands = new Hands({
-            locateFile: (file) => {
-              return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-            }
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
           });
           
           hands.setOptions({
@@ -1010,15 +1077,18 @@
             if (results.multiHandLandmarks) {
               drawHandLandmarks(ctx, results.multiHandLandmarks);
               
-              // Simple gesture detection
+              // Detect gesture
               if (results.multiHandLandmarks.length > 0) {
-                const gesture = detectSimpleGesture(results.multiHandLandmarks[0]);
+                const gesture = detectGesture(results.multiHandLandmarks[0]);
                 document.getElementById('outputText').innerHTML = gesture;
-                document.getElementById('confidenceScore').innerHTML = `⚡ Confidence: 92%`;
                 
-                // Translate to Swahili if needed
-                if (spokenLangSelected === 'sw' && translations['en'][gesture.toLowerCase()]) {
-                  document.getElementById('outputTranslation').innerHTML = translations['en'][gesture.toLowerCase()];
+                // Translate to speech
+                if (spokenLangSelected === 'en' && translations['en'][gesture.toLowerCase()]) {
+                  document.getElementById('outputTranslation').innerHTML = translations['en'][gesture.toLowerCase()].sw;
+                  document.getElementById('liveCaption').innerHTML = `🤟 ${translations['en'][gesture.toLowerCase()].sign}`;
+                } else if (spokenLangSelected === 'sw' && translations['sw'][gesture.toLowerCase()]) {
+                  document.getElementById('outputTranslation').innerHTML = translations['sw'][gesture.toLowerCase()].en;
+                  document.getElementById('liveCaption').innerHTML = `🤟 ${translations['sw'][gesture.toLowerCase()].sign}`;
                 }
               }
             }
@@ -1035,15 +1105,14 @@
             width: 640,
             height: 480
           });
-          await camera.start();
+          camera.start();
           
           cameraActive = true;
           btn.classList.add('active');
-          btn.innerHTML = '<span>📷</span> Stop Camera';
-          status.innerHTML = '<span class="status-dot dot-active"></span>On';
+          btn.innerHTML = '<img src="/icons/icon-72x72.png" alt=""> Stop Camera';
+          status.innerHTML = '<span class="status-dot dot-active"></span> On';
           document.getElementById('liveCaption').innerHTML = '🤟 Camera active - Show signs';
-          document.getElementById('modelStatus').innerHTML = '<span class="status-dot dot-active"></span>Tracking';
-          logInfo('✓ Camera started');
+          logInfo('Camera started');
           
         } catch (error) {
           logError('Camera error:', error);
@@ -1054,15 +1123,14 @@
           videoStream.getTracks().forEach(track => track.stop());
         }
         if (camera) {
-          await camera.stop();
+          camera.stop();
         }
         
         cameraActive = false;
         btn.classList.remove('active');
-        btn.innerHTML = '<span>📷</span> Start Camera';
-        status.innerHTML = '<span class="status-dot dot-inactive"></span>Off';
+        btn.innerHTML = '<img src="/icons/icon-72x72.png" alt=""> Start Camera';
+        status.innerHTML = '<span class="status-dot dot-inactive"></span> Off';
         document.getElementById('liveCaption').innerHTML = '🤟 Camera stopped';
-        document.getElementById('modelStatus').innerHTML = '<span class="status-dot dot-active"></span>Ready';
         
         const canvas = document.getElementById('handCanvas');
         const ctx = canvas.getContext('2d');
@@ -1073,7 +1141,7 @@
     }
 
     function drawHandLandmarks(ctx, landmarks) {
-      ctx.strokeStyle = '#4a9fd0';
+      ctx.strokeStyle = '#2563eb';
       ctx.lineWidth = 3;
       
       const connections = [
@@ -1085,50 +1153,40 @@
       ];
       
       landmarks.forEach(hand => {
-        // Draw connections
-        ctx.beginPath();
         connections.forEach(([start, end]) => {
           if (hand[start] && hand[end]) {
+            ctx.beginPath();
             ctx.moveTo(hand[start].x * ctx.canvas.width, hand[start].y * ctx.canvas.height);
             ctx.lineTo(hand[end].x * ctx.canvas.width, hand[end].y * ctx.canvas.height);
+            ctx.strokeStyle = '#2563eb';
+            ctx.stroke();
           }
         });
-        ctx.strokeStyle = '#4a9fd0';
-        ctx.stroke();
         
-        // Draw landmarks
         hand.forEach(point => {
           ctx.beginPath();
           ctx.arc(point.x * ctx.canvas.width, point.y * ctx.canvas.height, 5, 0, 2 * Math.PI);
-          ctx.fillStyle = '#ffd700';
+          ctx.fillStyle = '#7c3aed';
           ctx.fill();
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2;
-          ctx.stroke();
+          ctx.shadowColor = '#2563eb';
+          ctx.shadowBlur = 10;
         });
       });
     }
 
-    function detectSimpleGesture(landmarks) {
-      // Simple gesture detection based on hand position
+    function detectGesture(landmarks) {
       const thumbTip = landmarks[4];
       const indexTip = landmarks[8];
-      const middleTip = landmarks[12];
       
-      // Hello wave - fingers spread
-      if (thumbTip.y < landmarks[3].y && indexTip.y < landmarks[6].y && middleTip.y < landmarks[10].y) {
-        return 'Hello';
-      }
-      // Thank you - thumb up
-      else if (thumbTip.y < landmarks[3].y && indexTip.y > landmarks[6].y) {
-        return 'Thank you';
-      }
-      // Pointing
-      else if (indexTip.y < landmarks[6].y && thumbTip.y > landmarks[3].y) {
-        return 'Point';
-      }
-      else {
-        return 'Sign detected';
+      // Simple gesture detection based on hand position
+      if (thumbTip.y < landmarks[3].y && indexTip.y < landmarks[7].y) {
+        return 'hello';
+      } else if (thumbTip.x < landmarks[3].x && indexTip.x < landmarks[7].x) {
+        return 'thank you';
+      } else if (thumbTip.y > landmarks[3].y && indexTip.y > landmarks[7].y) {
+        return 'please';
+      } else {
+        return 'sign detected';
       }
     }
 
@@ -1138,25 +1196,23 @@
       const status = document.getElementById('micStatus');
       
       if (!micActive) {
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-          alert('Speech recognition not supported. Use Chrome, Edge, or Safari.');
+        if (!('webkitSpeechRecognition' in window)) {
+          alert('Speech recognition not supported. Use Chrome or Edge.');
           return;
         }
         
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
+        recognition = new webkitSpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = spokenLangSelected === 'sw' ? 'sw-TZ' : 'en-US';
-        recognition.maxAlternatives = 1;
         
         recognition.onstart = () => {
           micActive = true;
           btn.classList.add('active');
-          btn.innerHTML = '<span>🎙️</span> Stop Mic';
-          status.innerHTML = '<span class="status-dot dot-active"></span>On';
-          document.getElementById('liveCaption').innerHTML = '🎤 Listening... Speak now';
-          logInfo('✓ Microphone started');
+          btn.innerHTML = '<img src="/icons/icon-72x72.png" alt=""> Stop Mic';
+          status.innerHTML = '<span class="status-dot dot-active"></span> On';
+          document.getElementById('liveCaption').innerHTML = '🎤 Listening...';
+          logInfo('Microphone started');
         };
         
         recognition.onresult = (event) => {
@@ -1169,29 +1225,18 @@
           document.getElementById('outputText').innerHTML = transcript;
           document.getElementById('liveCaption').innerHTML = `🎤 ${transcript}`;
           
-          // Translate
-          if (spokenLangSelected === 'sw') {
-            // Swahili to English
-            let translated = '...';
-            for (const [sw, en] of Object.entries(translations['sw'])) {
-              if (transcript.includes(sw)) {
-                translated = en;
-                break;
-              }
-            }
-            document.getElementById('outputTranslation').innerHTML = translated;
-          } else {
-            // English to Swahili
-            let translated = '...';
-            for (const [en, sw] of Object.entries(translations['en'])) {
-              if (transcript.includes(en)) {
-                translated = sw;
-                break;
-              }
-            }
-            document.getElementById('outputTranslation').innerHTML = translated;
+          // Translate to sign language
+          if (spokenLangSelected === 'sw' && translations['sw'][transcript]) {
+            const translation = translations['sw'][transcript];
+            document.getElementById('outputTranslation').innerHTML = translation.en;
+            document.getElementById('liveCaption').innerHTML = `🤟 ${translation.sign}`;
+          } else if (spokenLangSelected === 'en' && translations['en'][transcript]) {
+            const translation = translations['en'][transcript];
+            document.getElementById('outputTranslation').innerHTML = translation.sw;
+            document.getElementById('liveCaption').innerHTML = `🤟 ${translation.sign}`;
           }
           
+          // Update confidence
           if (event.results[0][0].confidence) {
             const confidence = Math.round(event.results[0][0].confidence * 100);
             document.getElementById('confidenceScore').innerHTML = `⚡ Confidence: ${confidence}%`;
@@ -1200,17 +1245,7 @@
         
         recognition.onerror = (event) => {
           logError('Speech recognition error:', event.error);
-          if (event.error === 'not-allowed') {
-            alert('Microphone access denied. Please allow microphone access.');
-          }
           stopMicrophone();
-        };
-        
-        recognition.onend = () => {
-          if (micActive) {
-            // Restart if still active
-            recognition.start();
-          }
         };
         
         recognition.start();
@@ -1227,8 +1262,8 @@
       
       micActive = false;
       document.getElementById('micBtn').classList.remove('active');
-      document.getElementById('micBtn').innerHTML = '<span>🎙️</span> Start Mic';
-      document.getElementById('micStatus').innerHTML = '<span class="status-dot dot-inactive"></span>Off';
+      document.getElementById('micBtn').innerHTML = '<img src="/icons/icon-72x72.png" alt=""> Start Mic';
+      document.getElementById('micStatus').innerHTML = '<span class="status-dot dot-inactive"></span> Off';
       document.getElementById('liveCaption').innerHTML = '🤟 Microphone stopped';
       logInfo('Microphone stopped');
     }
@@ -1253,8 +1288,6 @@
 
     function closeAuthModal() {
       document.getElementById('authModal').style.display = 'none';
-      document.getElementById('authEmail').value = '';
-      document.getElementById('authPassword').value = '';
     }
 
     function toggleAuthMode() {
@@ -1273,10 +1306,10 @@
       try {
         if (currentAuthMode === 'login') {
           await auth.signInWithEmailAndPassword(email, password);
-          logInfo('✓ Login successful');
+          logInfo('Login successful');
         } else {
           await auth.createUserWithEmailAndPassword(email, password);
-          logInfo('✓ Signup successful');
+          logInfo('Signup successful');
         }
         closeAuthModal();
       } catch (error) {
@@ -1297,26 +1330,17 @@
         loginBtn.style.display = 'none';
         signupBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
-        document.getElementById('liveCaption').innerHTML = `🤟 Karibu, ${user.email}!`;
-        
-        // Enable buttons
         cameraBtn.disabled = false;
         micBtn.disabled = false;
-        
+        document.getElementById('liveCaption').innerHTML = `🤟 Karibu, ${user.email}!`;
         logInfo(`User logged in: ${user.email}`);
       } else {
         loginBtn.style.display = 'inline-block';
         signupBtn.style.display = 'inline-block';
         logoutBtn.style.display = 'none';
-        document.getElementById('liveCaption').innerHTML = '🤟 Please login to use camera/mic';
-        
-        // Disable buttons
         cameraBtn.disabled = true;
         micBtn.disabled = true;
-        
-        // Stop any active camera/mic
-        if (cameraActive) toggleCamera();
-        if (micActive) stopMicrophone();
+        document.getElementById('liveCaption').innerHTML = '🤟 Tafadhali login - Please login';
       }
     });
 
@@ -1328,22 +1352,14 @@
     window.onload = () => {
       init3DAvatar();
       populateLanguages();
-      document.getElementById('modelStatus').innerHTML = '<span class="status-dot dot-active"></span>Ready';
-      logInfo('✓ SIGNAID initialized successfully');
+      
+      // Set initial text
+      document.getElementById('outputText').innerHTML = 'Habari yako?';
+      document.getElementById('outputTranslation').innerHTML = 'How are you?';
+      document.getElementById('liveCaption').innerHTML = '🤟 Karibu SIGNAID';
+      
+      logInfo('SIGNAID initialized');
     };
-
-    // ========== CLEANUP ==========
-    window.addEventListener('beforeunload', () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-      }
-      if (recognition) {
-        recognition.stop();
-      }
-    });
 
     // ========== RESIZE HANDLER ==========
     window.addEventListener('resize', () => {
@@ -1355,27 +1371,12 @@
       }
     });
 
-    // ========== OFFLINE DETECTION ==========
-    window.addEventListener('online', () => {
-      document.getElementById('liveCaption').innerHTML = '🤟 Back online!';
-      logInfo('Connection restored');
-    });
-
-    window.addEventListener('offline', () => {
-      document.getElementById('liveCaption').innerHTML = '📶 Offline mode - limited features';
-      logInfo('Offline mode active');
-    });
-
-    // Test media devices on load
-    async function testMediaDevices() {
-      try {
-        await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-        logInfo('✓ Media devices available');
-      } catch (error) {
-        logInfo('Media devices not available - will request when needed');
-      }
+    // ========== SERVICE WORKER ==========
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => logInfo('Service Worker registered'))
+        .catch(err => logError('SW registration failed:', err));
     }
-    testMediaDevices();
   </script>
 </body>
 </html>
