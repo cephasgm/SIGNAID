@@ -1,16 +1,16 @@
 {
-  "name": "SIGNAID - Global Sign Language Translator",
-  "short_name": "SIGNAID",
-  "description": "Real-time sign language translation for 100+ languages. Free PWA with offline support, 3D avatars, and AI-powered recognition.",
+  "name": "SIGNAID 3.0 - Neural Sign Language Bridge",
+  "short_name": "SIGNAID 3.0",
+  "description": "Advanced AI sign language translation with holographic avatars, neural interface support, and global community ecosystem. Supports 200+ spoken languages and 180+ sign languages with real-time neural processing.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0f1e",
   "theme_color": "#2563eb",
-  "orientation": "portrait",
+  "orientation": "any",
   "scope": "/",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["communication", "education", "accessibility", "social"],
+  "categories": ["communication", "education", "accessibility", "social", "augmented-reality", "artificial-intelligence"],
   "prefer_related_applications": false,
   "icons": [
     {
@@ -72,42 +72,103 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/icons/neural-icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/holo-icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "screenshots": [
     {
-      "src": "/screenshots/home.jpg",
+      "src": "/screenshots/home-v3.jpg",
       "sizes": "1280x720",
       "type": "image/jpeg",
       "platform": "wide",
-      "label": "SIGNAID Home Screen with 3D Avatar"
+      "label": "SIGNAID 3.0 Neural Interface"
     },
     {
-      "src": "/screenshots/translation.jpg",
+      "src": "/screenshots/translation-v3.jpg",
       "sizes": "1280x720",
       "type": "image/jpeg",
       "platform": "wide",
-      "label": "Real-time Sign Language Translation"
+      "label": "Real-time Neural Sign Translation"
+    },
+    {
+      "src": "/screenshots/holographic.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "platform": "wide",
+      "label": "Holographic Avatar Projection"
+    },
+    {
+      "src": "/screenshots/conference.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "platform": "wide",
+      "label": "Multi-Person Conference Mode"
+    },
+    {
+      "src": "/screenshots/community.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "platform": "wide",
+      "label": "Community Sign Language Database"
     }
   ],
   "shortcuts": [
     {
-      "name": "Start Translation",
+      "name": "Neural Translation",
       "short_name": "Translate",
-      "description": "Open translation interface",
-      "url": "/?translate",
-      "icons": [{ "src": "/icons/shortcut-translate.png", "sizes": "96x96" }]
+      "description": "Open neural translation interface",
+      "url": "/?neural",
+      "icons": [{ "src": "/icons/shortcut-neural.png", "sizes": "96x96" }]
     },
     {
-      "name": "Learn Signs",
+      "name": "Holographic Mode",
+      "short_name": "Holo",
+      "description": "Launch holographic avatar",
+      "url": "/?hologram",
+      "icons": [{ "src": "/icons/shortcut-holo.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Community Signs",
+      "short_name": "Community",
+      "description": "Browse and contribute signs",
+      "url": "/community",
+      "icons": [{ "src": "/icons/shortcut-community.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "AI Tutor",
       "short_name": "Learn",
-      "description": "Browse sign language lessons",
-      "url": "/learn",
-      "icons": [{ "src": "/icons/shortcut-learn.png", "sizes": "96x96" }]
+      "description": "Start sign language lessons",
+      "url": "/tutor",
+      "icons": [{ "src": "/icons/shortcut-tutor.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Marketplace",
+      "short_name": "Market",
+      "description": "Find interpreters and services",
+      "url": "/marketplace",
+      "icons": [{ "src": "/icons/shortcut-market.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Developer API",
+      "short_name": "API",
+      "description": "Access SIGNAID API",
+      "url": "/developers",
+      "icons": [{ "src": "/icons/shortcut-api.png", "sizes": "96x96" }]
     }
   ],
   "related_applications": [],
-  "display_override": ["standalone", "fullscreen"],
+  "display_override": ["standalone", "fullscreen", "window-controls-overlay"],
   "edge_side_panel": {
     "preferred_width": 480
   },
@@ -115,6 +176,10 @@
     {
       "protocol": "web+signaid",
       "url": "/?translate=%s"
+    },
+    {
+      "protocol": "web+signaid-neural",
+      "url": "/?neural=%s"
     }
   ],
   "share_target": {
@@ -128,9 +193,33 @@
       "files": [
         {
           "name": "video",
-          "accept": ["video/*"]
+          "accept": ["video/*", "image/*"]
         }
       ]
     }
-  }
+  },
+  "features": [
+    "Neural Interface Integration",
+    "Holographic Projection",
+    "Multi-Person Conference",
+    "Emotion Detection",
+    "Offline Language Packs",
+    "Community Database",
+    "AI Tutor",
+    "Real-time Synthesis",
+    "Video Call Translation",
+    "Cultural Adaptation",
+    "Developer API",
+    "Service Marketplace",
+    "Live Broadcasting"
+  ],
+  "permissions": [
+    "camera",
+    "microphone",
+    "bluetooth",
+    "xr-spatial-tracking",
+    "storage",
+    "background-sync",
+    "notifications"
+  ]
 }
