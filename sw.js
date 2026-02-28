@@ -144,3 +144,4 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification('SIGNAID', options)
   );
 });
+
