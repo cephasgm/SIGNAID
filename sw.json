@@ -1,0 +1,31 @@
+{
+  "name": "SIGNAID Service Worker",
+  "version": "1.0.0",
+  "description": "Offline caching for SIGNAID PWA",
+  "scope": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1c2f",
+  "theme_color": "#1a3b55",
+  "offline_page": "/offline.html",
+  "cache_version": 1,
+  "static_assets": [
+    "/",
+    "/index.html",
+    "/offline.html",
+    "/manifest.json",
+    "/icons/icon-192x192.png",
+    "/icons/icon-512x512.png"
+  ],
+  "api_endpoints": [],
+  "strategy": "cache-first",
+  "network_timeout": 3000,
+  "precache_config": {
+    "enabled": true,
+    "revision": "1.0.0"
+  },
+  "navigation_fallback": {
+    "enabled": true,
+    "fallback_url": "/offline.html"
+  }
+}
