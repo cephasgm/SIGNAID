@@ -1,404 +1,599 @@
-// SIGNAID Service Worker v2.1.0
-// Production-ready with advanced caching strategies
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>SIGNAID 3.0 - Neural Bridge Offline</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
 
-const CACHE_NAME = 'signaid-v2';
-const OFFLINE_URL = '/offline.html';
-const API_CACHE_NAME = 'signaid-api-v1';
-const MEDIA_CACHE_NAME = 'signaid-media-v1';
+    body {
+      background: linear-gradient(135deg, #0a0f1e 0%, #1a2f45 100%);
+      min-height: 100vh;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+    }
 
-// Static assets to cache on install
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/offline.html',
-  '/manifest.json',
-  '/icons/icon-72x72.png',
-  '/icons/icon-96x96.png',
-  '/icons/icon-128x128.png',
-  '/icons/icon-144x144.png',
-  '/icons/icon-152x152.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-384x384.png',
-  '/icons/icon-512x512.png',
-  '/icons/maskable-icon-192x192.png',
-  '/icons/maskable-icon-512x512.png'
-];
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(124, 58, 237, 0.15) 0%, transparent 40%);
+      pointer-events: none;
+    }
 
-// CDN assets to cache
-const CDN_ASSETS = [
-  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
-  'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js',
-  'https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js',
-  'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js'
-];
+    .offline-container {
+      background: rgba(10, 15, 30, 0.35);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border-radius: 40px;
+      padding: 24px;
+      width: 100%;
+      max-width: 600px;
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      box-shadow: 0 0 60px rgba(37, 99, 235, 0.15);
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-height: 98vh;
+      overflow-y: auto;
+    }
 
-// Language models to cache (would be actual model files)
-const LANGUAGE_MODELS = [
-  '/models/swahili-sign/model.json',
-  '/models/asl/model.json',
-  '/models/bsl/model.json'
-];
+    /* Custom scrollbar */
+    .offline-container::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .offline-container::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+    }
+    
+    .offline-container::-webkit-scrollbar-thumb {
+      background: rgba(37, 99, 235, 0.5);
+      border-radius: 4px;
+    }
 
-// Install event - cache static assets
-self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing version 2.1.0');
-  
-  event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      
-      // Cache static assets
-      await cache.addAll(STATIC_ASSETS);
-      console.log('[Service Worker] Static assets cached');
-      
-      // Cache CDN assets in background
-      event.waitUntil(
-        (async () => {
-          const cdnCache = await caches.open(MEDIA_CACHE_NAME);
-          for (const url of CDN_ASSETS) {
-            try {
-              const response = await fetch(url, { mode: 'no-cors' });
-              await cdnCache.put(url, response);
-            } catch (error) {
-              console.log(`[Service Worker] Failed to cache CDN asset: ${url}`);
-            }
+    .neural-ring {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #7c3aed, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      animation: pulse 3s infinite;
+    }
+
+    .neural-ring::before {
+      content: '';
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 2px solid rgba(37, 99, 235, 0.3);
+      animation: ring 3s infinite;
+    }
+
+    .neural-ring::after {
+      content: '';
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 2px solid rgba(124, 58, 237, 0.2);
+      animation: ring 3s infinite 1s;
+    }
+
+    .neural-ring span {
+      font-size: 3.2rem;
+      filter: drop-shadow(0 0 15px #2563eb);
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    @keyframes ring {
+      0% { transform: scale(1); opacity: 0.5; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      background: linear-gradient(135deg, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .offline-badge {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      padding: 5px 18px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      margin-bottom: 16px;
+      border: 1px solid #10b981;
+      font-weight: 500;
+    }
+
+    .description-text {
+      color: #94a3b8;
+      margin-bottom: 20px;
+      line-height: 1.5;
+      font-size: 0.9rem;
+      padding: 0 8px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 16px 0;
+    }
+
+    .stat-card {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 20px;
+      padding: 12px 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #60a5fa;
+      margin-bottom: 3px;
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      color: #94a3b8;
+      font-size: 0.7rem;
+      line-height: 1.3;
+      padding: 0 4px;
+    }
+
+    .offline-features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin: 16px 0;
+    }
+
+    .feature-item {
+      background: rgba(37, 99, 235, 0.1);
+      border-radius: 16px;
+      padding: 8px 4px;
+      color: #cbd5e1;
+      font-size: 0.7rem;
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .feature-item.active {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: #10b981;
+      color: #10b981;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px 0 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border-radius: 40px;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+      min-width: 130px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .btn-outline:hover {
+      border-color: #2563eb;
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .status-message {
+      margin: 12px 0 8px;
+      color: #94a3b8;
+      font-size: 0.8rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2563eb, #7c3aed);
+      width: 75%;
+      border-radius: 2px;
+      animation: progress 2s ease-in-out infinite;
+    }
+
+    @keyframes progress {
+      0% { width: 60%; }
+      50% { width: 80%; }
+      100% { width: 60%; }
+    }
+
+    .version-text {
+      margin-top: 8px;
+      color: #4b5563;
+      font-size: 0.7rem;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 480px) {
+      body {
+        padding: 8px;
+      }
+
+      .offline-container {
+        padding: 16px;
+        border-radius: 30px;
+      }
+
+      .neural-ring {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 12px;
+      }
+
+      .neural-ring::before {
+        width: 96px;
+        height: 96px;
+      }
+
+      .neural-ring::after {
+        width: 112px;
+        height: 112px;
+      }
+
+      .neural-ring span {
+        font-size: 2.5rem;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+        margin-bottom: 6px;
+      }
+
+      .offline-badge {
+        padding: 4px 12px;
+        font-size: 0.7rem;
+        margin-bottom: 12px;
+      }
+
+      .description-text {
+        font-size: 0.8rem;
+        margin-bottom: 12px;
+      }
+
+      .stats-grid {
+        gap: 5px;
+        margin: 12px 0;
+      }
+
+      .stat-card {
+        padding: 8px 4px;
+        border-radius: 16px;
+      }
+
+      .stat-value {
+        font-size: 1.2rem;
+      }
+
+      .stat-label {
+        font-size: 0.6rem;
+      }
+
+      .offline-features {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 5px;
+        margin: 12px 0;
+      }
+
+      .feature-item {
+        padding: 6px 4px;
+        font-size: 0.65rem;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        gap: 8px;
+        margin: 16px 0 8px;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 10px 16px;
+        font-size: 0.8rem;
+        min-width: auto;
+      }
+
+      .status-message {
+        font-size: 0.7rem;
+        margin: 8px 0 4px;
+      }
+
+      .progress-bar {
+        margin: 8px 0;
+      }
+
+      .version-text {
+        font-size: 0.6rem;
+      }
+    }
+
+    /* Small height screens */
+    @media (max-height: 700px) {
+      .offline-container {
+        padding: 16px;
+      }
+
+      .neural-ring {
+        width: 70px;
+        height: 70px;
+        margin-bottom: 10px;
+      }
+
+      .neural-ring::before {
+        width: 86px;
+        height: 86px;
+      }
+
+      .neural-ring::after {
+        width: 102px;
+        height: 102px;
+      }
+
+      .neural-ring span {
+        font-size: 2.2rem;
+      }
+
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 4px;
+      }
+
+      .stats-grid {
+        margin: 10px 0;
+      }
+
+      .offline-features {
+        margin: 10px 0;
+      }
+
+      .action-buttons {
+        margin: 12px 0 6px;
+      }
+    }
+
+    /* Landscape mode */
+    @media (orientation: landscape) and (max-height: 500px) {
+      body {
+        padding: 5px;
+      }
+
+      .offline-container {
+        padding: 12px;
+        max-height: 98vh;
+      }
+
+      .neural-ring {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 6px;
+        float: left;
+        margin-right: 15px;
+      }
+
+      .neural-ring::before {
+        width: 76px;
+        height: 76px;
+      }
+
+      .neural-ring::after {
+        width: 92px;
+        height: 92px;
+      }
+
+      .neural-ring span {
+        font-size: 1.8rem;
+      }
+
+      h1 {
+        font-size: 1.4rem;
+        text-align: left;
+        margin-bottom: 4px;
+      }
+
+      .offline-badge {
+        float: left;
+        clear: left;
+        margin-bottom: 8px;
+      }
+
+      .description-text {
+        text-align: left;
+        clear: left;
+      }
+
+      .stats-grid {
+        clear: both;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-container">
+    <div class="neural-ring">
+      <span>🧠</span>
+    </div>
+    
+    <h1>Neural Bridge Offline</h1>
+    
+    <div class="offline-badge">
+      ⚡ Neural Link: Disconnected
+    </div>
+    
+    <p class="description-text">
+      Your SIGNAID 3.0 neural bridge is operating in offline mode.<br>
+      Limited functionality available with cached models.
+    </p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">15</div>
+        <div class="stat-label">Cached Sign Languages</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">1.2k</div>
+        <div class="stat-label">Offline Signs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">87%</div>
+        <div class="stat-label">Neural Accuracy</div>
+      </div>
+    </div>
+
+    <div class="offline-features">
+      <div class="feature-item active">✓ Sign Recognition</div>
+      <div class="feature-item active">✓ Basic Translation</div>
+      <div class="feature-item active">✓ 3D Avatar</div>
+      <div class="feature-item">✗ Neural Interface</div>
+      <div class="feature-item">✗ Holographic</div>
+      <div class="feature-item">✗ Live Broadcast</div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-primary" onclick="window.location.href='/'">
+        Retry Connection
+      </button>
+      <button class="btn btn-outline" onclick="window.location.href='/#offline-mode'">
+        Continue Offline
+      </button>
+    </div>
+
+    <div class="status-message">
+      <span>🔄 Syncing when connection restores...</span>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+
+    <div class="version-text">
+      SIGNAID 3.0 Neural Bridge • Cached Version 3.0.0
+    </div>
+  </div>
+
+  <script>
+    // Auto-retry connection
+    let retryCount = 0;
+    const maxRetries = 5;
+
+    function checkConnection() {
+      fetch('/api/v3/status', { 
+        method: 'HEAD',
+        mode: 'no-cors'
+      }).then(() => {
+        window.location.href = '/';
+      }).catch(() => {
+        retryCount++;
+        if (retryCount < maxRetries) {
+          setTimeout(checkConnection, 3000);
+        }
+      });
+    }
+
+    setTimeout(checkConnection, 5000);
+
+    // Show cached stats
+    if ('caches' in window) {
+      caches.open('signaid-models-v3').then(cache => {
+        cache.keys().then(keys => {
+          const countElement = document.querySelector('.stat-card:first-child .stat-value');
+          if (countElement) {
+            countElement.textContent = keys.filter(k => k.url.includes('model.json')).length || '15';
           }
-        })()
-      );
-      
-      // Force activation
-      await self.skipWaiting();
-    })()
-  );
-});
-
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating');
-  
-  event.waitUntil(
-    (async () => {
-      // Clean old caches
-      const cacheNames = await caches.keys();
-      await Promise.all(
-        cacheNames
-          .filter(name => name.startsWith('signaid-') && name !== CACHE_NAME)
-          .map(name => caches.delete(name))
-      );
-      
-      // Take control of all clients
-      await self.clients.claim();
-      
-      // Notify all clients
-      const clients = await self.clients.matchAll();
-      clients.forEach(client => {
-        client.postMessage({
-          type: 'SW_ACTIVATED',
-          version: '2.1.0'
         });
       });
-      
-      console.log('[Service Worker] Ready');
-    })()
-  );
-});
-
-// Fetch event - advanced caching strategies
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // Skip cross-origin requests that aren't CDNs
-  if (!url.origin.includes('localhost') && 
-      !url.origin.includes('127.0.0.1') &&
-      !CDN_ASSETS.some(cdn => url.href.includes(cdn))) {
-    return;
-  }
-
-  // API requests - Network first, fallback to cache
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(handleApiRequest(request));
-    return;
-  }
-
-  // Media/CDN assets - Cache first, network fallback
-  if (url.href.includes('cdn') || url.pathname.match(/\.(js|css|png|jpg|svg)$/)) {
-    event.respondWith(handleMediaRequest(request));
-    return;
-  }
-
-  // HTML navigation - Stale-while-revalidate
-  if (request.mode === 'navigate') {
-    event.respondWith(handleNavigationRequest(request));
-    return;
-  }
-
-  // Default - Cache first, then network
-  event.respondWith(handleDefaultRequest(request));
-});
-
-// Handle API requests
-async function handleApiRequest(request) {
-  try {
-    // Try network first
-    const networkResponse = await fetch(request);
-    
-    // Cache successful responses
-    if (networkResponse.ok) {
-      const cache = await caches.open(API_CACHE_NAME);
-      cache.put(request, networkResponse.clone());
     }
-    
-    return networkResponse;
-  } catch (error) {
-    // Fallback to cache
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-    
-    // Return offline API response
-    return new Response(
-      JSON.stringify({ 
-        error: 'offline', 
-        message: 'You are offline. Using cached data.',
-        timestamp: Date.now()
-      }),
-      {
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  }
-}
 
-// Handle media requests
-async function handleMediaRequest(request) {
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    // Return cached and update in background
-    event.waitUntil(updateCache(request));
-    return cachedResponse;
-  }
-  
-  try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      const cache = await caches.open(MEDIA_CACHE_NAME);
-      cache.put(request, networkResponse.clone());
+    // Background sync registration
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.sync.register('sync-translations').catch(() => {});
+        registration.sync.register('sync-neural').catch(() => {});
+      });
     }
-    return networkResponse;
-  } catch (error) {
-    return new Response('Media unavailable offline', { status: 404 });
-  }
-}
 
-// Handle navigation requests
-async function handleNavigationRequest(request) {
-  try {
-    // Try network
-    const networkResponse = await fetch(request);
-    
-    // Update cache
-    const cache = await caches.open(CACHE_NAME);
-    cache.put(request, networkResponse.clone());
-    
-    return networkResponse;
-  } catch (error) {
-    // Check cache
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-    
-    // Return offline page
-    const offlineResponse = await caches.match(OFFLINE_URL);
-    if (offlineResponse) {
-      return offlineResponse;
-    }
-    
-    // Last resort - generate offline page
-    return new Response(
-      '<html><body><h1>Offline</h1><p>Please check your connection</p></body></html>',
-      {
-        headers: { 'Content-Type': 'text/html' }
-      }
-    );
-  }
-}
-
-// Handle default requests
-async function handleDefaultRequest(request) {
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
-  try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok && networkResponse.type === 'basic') {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, networkResponse.clone());
-    }
-    return networkResponse;
-  } catch (error) {
-    return new Response('Resource unavailable offline', { status: 404 });
-  }
-}
-
-// Update cache in background
-async function updateCache(request) {
-  try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, networkResponse);
-    }
-  } catch (error) {
-    console.log('Background update failed:', error);
-  }
-}
-
-// Background sync for offline translations
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-translations') {
-    event.waitUntil(syncOfflineTranslations());
-  }
-  
-  if (event.tag === 'sync-user-data') {
-    event.waitUntil(syncUserData());
-  }
-});
-
-async function syncOfflineTranslations() {
-  try {
-    const db = await openTranslationDB();
-    const offlineTranslations = await db.getAll('pending');
-    
-    for (const translation of offlineTranslations) {
-      try {
-        const response = await fetch('/api/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(translation)
-        });
-        
-        if (response.ok) {
-          await db.delete('pending', translation.id);
-        }
-      } catch (error) {
-        console.log('Sync failed for translation:', translation.id);
+    // Responsive adjustment for very small screens
+    function adjustForScreenSize() {
+      const container = document.querySelector('.offline-container');
+      if (window.innerHeight < 600) {
+        container.style.padding = '12px';
       }
     }
-  } catch (error) {
-    console.log('Sync error:', error);
-  }
-}
 
-async function syncUserData() {
-  // Sync user preferences, saved translations, etc.
-  console.log('Syncing user data');
-}
-
-// IndexedDB for offline storage
-function openTranslationDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('SIGNAIDOffline', 1);
-    
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains('pending')) {
-        db.createObjectStore('pending', { keyPath: 'id', autoIncrement: true });
-      }
-      if (!db.objectStoreNames.contains('translations')) {
-        db.createObjectStore('translations', { keyPath: 'id' });
-      }
-    };
-    
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-// Push notification handler
-self.addEventListener('push', (event) => {
-  const options = {
-    body: event.data.text(),
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
-    vibrate: [200, 100, 200],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1,
-      url: '/'
-    },
-    actions: [
-      {
-        action: 'open',
-        title: 'Open SIGNAID'
-      },
-      {
-        action: 'close',
-        title: 'Dismiss'
-      }
-    ]
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification('SIGNAID', options)
-  );
-});
-
-// Notification click handler
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  
-  if (event.action === 'open') {
-    event.waitUntil(
-      clients.openWindow(event.notification.data.url)
-    );
-  }
-});
-
-// Message handler
-self.addEventListener('message', (event) => {
-  if (event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-  
-  if (event.data.type === 'CLEAR_CACHE') {
-    event.waitUntil(clearOldCache());
-  }
-});
-
-async function clearOldCache() {
-  const cacheNames = await caches.keys();
-  const oldCaches = cacheNames.filter(name => 
-    name.startsWith('signaid-') && name !== CACHE_NAME
-  );
-  
-  await Promise.all(oldCaches.map(name => caches.delete(name)));
-  
-  // Notify clients
-  const clients = await self.clients.matchAll();
-  clients.forEach(client => {
-    client.postMessage({
-      type: 'CACHE_CLEARED',
-      caches: oldCaches
-    });
-  });
-}
-
-// Periodic sync (if supported)
-self.addEventListener('periodicsync', (event) => {
-  if (event.tag === 'update-models') {
-    event.waitUntil(updateLanguageModels());
-  }
-});
-
-async function updateLanguageModels() {
-  console.log('Checking for model updates');
-  // Implementation for model updates
-}
-
-console.log('[Service Worker] SIGNAID v2.1.0 loaded');
+    window.addEventListener('resize', adjustForScreenSize);
+    adjustForScreenSize();
+  </script>
+</body>
+</html>
