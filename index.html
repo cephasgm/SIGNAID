@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIGNAID - Universal Communication Bridge</title>
-  
-  <!-- Service Worker - Fixed path -->
-  <link rel="manifest" href="manifest.json">
+  <title>SIGNAID - Sign Language Communication Bridge</title>
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
   
   <!-- Three.js for 3D Avatars -->
@@ -23,13 +21,14 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
 
     body {
-      background: linear-gradient(145deg, #0a0f1e 0%, #1a2639 100%);
+      background: linear-gradient(145deg, #0a0f1f 0%, #1a2639 100%);
       min-height: 100vh;
       position: relative;
+      overflow: hidden;
     }
 
     /* Animated background */
@@ -39,15 +38,17 @@
       width: 100%;
       height: 100%;
       background: 
-        radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.1) 0%, transparent 30%),
-        radial-gradient(circle at 80% 70%, rgba(124, 58, 237, 0.1) 0%, transparent 30%);
+        radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(124, 58, 237, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 40% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 40%);
       pointer-events: none;
+      z-index: 0;
     }
 
     #app {
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 15px;
       position: relative;
       z-index: 1;
       height: 100vh;
@@ -60,12 +61,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 24px;
-      background: rgba(15, 23, 42, 0.8);
+      padding: 12px 25px;
+      background: rgba(10, 15, 30, 0.7);
       backdrop-filter: blur(12px);
       border-radius: 50px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
@@ -83,17 +84,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      font-weight: bold;
       color: white;
+      font-weight: bold;
+      font-size: 1.2rem;
+      box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
     }
 
     .logo-text {
       font-size: 1.8rem;
-      font-weight: 700;
+      font-weight: 600;
       background: linear-gradient(135deg, #fff, #94a3b8);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      letter-spacing: 0.5px;
     }
 
     .logo-text span {
@@ -111,15 +114,16 @@
       padding: 10px 24px;
       border-radius: 40px;
       border: none;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
       transition: all 0.3s;
       font-size: 0.95rem;
+      letter-spacing: 0.3px;
     }
 
     .btn-outline {
       background: transparent;
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
       color: white;
     }
 
@@ -131,71 +135,31 @@
     .btn-primary {
       background: linear-gradient(135deg, #2563eb, #7c3aed);
       color: white;
-      border: none;
-      box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 8px 20px -5px #2563eb;
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.5);
+      box-shadow: 0 12px 25px -5px #2563eb;
     }
 
-    /* Welcome Banner - Clean and Professional */
-    .welcome-banner {
-      background: rgba(37, 99, 235, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 40px;
-      padding: 12px 24px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .welcome-banner.show {
-      display: flex;
-    }
-
-    .welcome-text {
-      color: white;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .welcome-dismiss {
-      background: transparent;
-      border: none;
-      color: #94a3b8;
-      cursor: pointer;
-      font-size: 1.2rem;
-      padding: 0 8px;
-    }
-
-    .welcome-dismiss:hover {
-      color: white;
-    }
-
-    /* Main Grid - Optimized Space Usage */
+    /* Main Layout - Optimized space */
     .main-grid {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 20px;
-      flex: 1;
-      min-height: 0;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 15px;
+      height: calc(100vh - 90px);
     }
 
-    /* 3D Avatar Panel */
+    /* 3D Avatar Panel - Professional */
     .avatar-panel {
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(10px);
-      border-radius: 40px;
+      background: rgba(10, 15, 30, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 35px;
       overflow: hidden;
       position: relative;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
     #avatarCanvas {
@@ -211,158 +175,149 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
+      z-index: 5;
     }
 
     .caption-overlay {
       position: absolute;
-      bottom: 30px;
-      left: 30px;
-      right: 30px;
-      background: rgba(0, 0, 0, 0.7);
+      bottom: 25px;
+      left: 25px;
+      right: 25px;
+      background: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(16px);
-      padding: 20px 30px;
+      padding: 18px 25px;
       border-radius: 40px;
       color: white;
-      font-size: 1.8rem;
-      font-weight: 600;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 1.5rem;
+      font-weight: 500;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
       text-align: center;
     }
 
-    /* Control Panel - Compact and Efficient */
+    /* Control Panel - Compact & Professional */
     .control-panel {
-      background: rgba(15, 23, 42, 0.7);
+      background: rgba(10, 15, 30, 0.7);
       backdrop-filter: blur(16px);
-      border-radius: 40px;
-      padding: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 35px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      height: 100%;
+      gap: 15px;
       overflow-y: auto;
     }
 
-    /* Language Section - Compact */
-    .language-section {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 30px;
-      padding: 16px;
+    /* Language Selectors - Compact */
+    .language-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 25px;
+      padding: 15px;
     }
 
-    .section-title {
+    .lang-selector {
+      flex: 1;
+    }
+
+    .lang-label {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       color: #94a3b8;
-      margin-bottom: 12px;
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
     }
 
-    .search-box {
+    .lang-select {
       width: 100%;
-      padding: 10px 16px;
-      border-radius: 30px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 15px;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       color: white;
       font-size: 0.9rem;
-      margin-bottom: 12px;
-    }
-
-    .language-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      max-height: 120px;
-      overflow-y: auto;
-    }
-
-    .lang-item {
-      padding: 8px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.03);
-      color: #e2e8f0;
       cursor: pointer;
-      text-align: center;
-      font-size: 0.85rem;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      transition: all 0.2s;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+      background-size: 15px;
     }
 
-    .lang-item:hover {
-      background: rgba(37, 99, 235, 0.2);
-      border-color: #2563eb;
-    }
-
-    .lang-item.selected {
-      background: linear-gradient(135deg, #2563eb, #7c3aed);
+    .lang-select option {
+      background: #1a2639;
       color: white;
     }
 
-    /* Mode Tabs */
+    /* Mode Tabs - Professional */
     .mode-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 4px;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 6px;
       border-radius: 40px;
     }
 
     .mode-tab {
-      padding: 12px;
-      border-radius: 36px;
+      padding: 14px;
+      border-radius: 34px;
       border: none;
       background: transparent;
       color: #94a3b8;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
       transition: all 0.3s;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .mode-tab.active {
       background: linear-gradient(135deg, #2563eb, #7c3aed);
       color: white;
+      box-shadow: 0 8px 20px -5px #2563eb;
     }
 
-    /* Output Area - Clear Communication */
+    /* Output Area - Clean */
     .output-area {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 30px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 25px;
       padding: 20px;
+      min-height: 100px;
     }
 
-    .output-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      color: #94a3b8;
-      font-size: 0.85rem;
+    #outputPhrase {
+      font-size: 1.4rem;
+      color: #e2e8f0;
+      margin-bottom: 5px;
+      font-weight: 500;
+      word-break: break-word;
     }
 
-    #outputText {
+    #outputSign {
       font-size: 1.8rem;
-      color: white;
-      margin-bottom: 8px;
+      color: #2563eb;
       font-weight: 600;
+      margin-bottom: 8px;
     }
 
-    #outputTranslation {
-      font-size: 1.3rem;
-      color: #94a3b8;
-    }
-
-    #confidenceScore {
-      color: #10b981;
+    #statusMessage {
+      color: #64748b;
       font-size: 0.85rem;
-      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
-    /* Action Buttons */
+    /* Action Buttons - Clean */
     .action-buttons {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -370,25 +325,26 @@
     }
 
     .action-btn {
-      padding: 14px;
-      border-radius: 36px;
+      padding: 16px;
+      border-radius: 35px;
       border: none;
       background: rgba(255, 255, 255, 0.03);
       color: white;
       font-size: 1rem;
-      font-weight: 600;
+      font-weight: 500;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
       cursor: pointer;
       transition: all 0.3s;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .action-btn:hover:not(:disabled) {
       background: linear-gradient(135deg, #2563eb, #7c3aed);
       transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px #2563eb;
     }
 
     .action-btn.active {
@@ -400,13 +356,13 @@
       cursor: not-allowed;
     }
 
-    /* Status Panel - Minimal */
+    /* Status Panel - Compact */
     .status-panel {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 30px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 25px;
       padding: 12px;
     }
 
@@ -417,33 +373,55 @@
     .status-label {
       color: #64748b;
       font-size: 0.7rem;
+      text-transform: uppercase;
       margin-bottom: 4px;
     }
 
     .status-value {
       color: white;
       font-size: 0.8rem;
-      font-weight: 600;
+      font-weight: 500;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 4px;
     }
 
-    .status-dot {
-      width: 6px;
-      height: 6px;
+    .dot {
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       display: inline-block;
     }
 
-    .dot-active {
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
+    .dot.active { background: #10b981; box-shadow: 0 0 10px #10b981; }
+    .dot.inactive { background: #ef4444; }
+    .dot.ready { background: #2563eb; }
+
+    /* Professional Welcome Banner */
+    .welcome-banner {
+      position: fixed;
+      top: 80px;
+      right: 30px;
+      background: rgba(37, 99, 235, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 12px 25px;
+      border-radius: 40px;
+      color: white;
+      font-size: 0.95rem;
+      z-index: 100;
+      animation: slideIn 0.5s ease, fadeOut 0.5s ease 2.5s forwards;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 30px -5px #2563eb;
     }
 
-    .dot-inactive {
-      background: #ef4444;
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+      to { opacity: 0; transform: translateX(100%); }
     }
 
     /* Error Console */
@@ -463,29 +441,23 @@
       border: 1px solid #ef4444;
     }
 
-    .error-console.show {
-      display: block;
-    }
+    .error-console.show { display: block; }
 
     /* Auth Modal */
     .modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(10px);
-      align-items: center;
-      justify-content: center;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(16px);
+      align-items: center; justify-content: center;
       z-index: 2000;
     }
 
     .modal-content {
-      background: rgba(15, 23, 42, 0.95);
-      padding: 40px;
-      border-radius: 50px;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 35px;
+      border-radius: 45px;
       width: 400px;
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -494,30 +466,29 @@
       color: white;
       margin-bottom: 25px;
       text-align: center;
+      font-size: 1.8rem;
     }
 
     .modal-content input {
       width: 100%;
       padding: 14px 20px;
       margin-bottom: 15px;
-      border-radius: 30px;
+      border-radius: 35px;
       border: none;
       background: rgba(255, 255, 255, 0.05);
       color: white;
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* Responsive Adjustments */
-    @media (max-width: 1024px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-      }
-      
-      .avatar-panel {
-        height: 400px;
-      }
+    .modal-footer {
+      margin-top: 20px;
+      color: #64748b;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.9rem;
     }
+
+    .modal-footer:hover { color: #2563eb; }
   </style>
 </head>
 <body>
@@ -535,14 +506,8 @@
       </div>
     </nav>
 
-    <!-- Welcome Banner - Clean and Dismissible -->
-    <div class="welcome-banner" id="welcomeBanner">
-      <div class="welcome-text">
-        <span>👋</span>
-        <span id="welcomeMessage">Welcome to SIGNAID</span>
-      </div>
-      <button class="welcome-dismiss" id="dismissWelcome">✕</button>
-    </div>
+    <!-- Welcome Banner (auto-disappears) -->
+    <div class="welcome-banner" id="welcomeBanner" style="display: none;"></div>
 
     <!-- Main Grid -->
     <div class="main-grid">
@@ -555,43 +520,65 @@
 
       <!-- Control Panel -->
       <div class="control-panel">
-        <!-- Language Selection -->
-        <div class="language-section">
-          <div class="section-title">🎤 SPEAKER'S LANGUAGE</div>
-          <input type="text" class="search-box" id="searchSpoken" placeholder="Search language...">
-          <div class="language-grid" id="spokenLanguages"></div>
-        </div>
-
-        <div class="language-section">
-          <div class="section-title">🖐️ SIGN LANGUAGE</div>
-          <input type="text" class="search-box" id="searchSign" placeholder="Search sign language...">
-          <div class="language-grid" id="signLanguages"></div>
+        <!-- Language Row - Compact -->
+        <div class="language-row">
+          <div class="lang-selector">
+            <div class="lang-label">🗣️ SPEAKING</div>
+            <select class="lang-select" id="spokenLang">
+              <option value="sw">Swahili</option>
+              <option value="en" selected>English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="zh">中文</option>
+              <option value="ja">日本語</option>
+              <option value="ar">العربية</option>
+              <option value="hi">हिन्दी</option>
+              <option value="ru">Русский</option>
+              <option value="pt">Português</option>
+              <option value="it">Italiano</option>
+            </select>
+          </div>
+          <div class="lang-selector">
+            <div class="lang-label">🤟 SIGNING</div>
+            <select class="lang-select" id="signLang">
+              <option value="ASL">ASL (American)</option>
+              <option value="BSL">BSL (British)</option>
+              <option value="Swahili Sign" selected>Swahili Sign</option>
+              <option value="LSF">LSF (French)</option>
+              <option value="DGS">DGS (German)</option>
+              <option value="CSL">CSL (Chinese)</option>
+              <option value="JSL">JSL (Japanese)</option>
+              <option value="ArSL">ArSL (Arabic)</option>
+              <option value="Indian Sign">Indian Sign</option>
+            </select>
+          </div>
         </div>
 
         <!-- Mode Tabs -->
         <div class="mode-tabs">
-          <button class="mode-tab active" id="modeSign2Speech">🖐️ SIGN → 🎤 SPEECH</button>
-          <button class="mode-tab" id="modeSpeech2Sign">🎤 SPEECH → 🖐️ SIGN</button>
+          <button class="mode-tab active" id="modeSign2Speech">
+            ✋ SIGN → 🗣️ SPEECH
+          </button>
+          <button class="mode-tab" id="modeSpeech2Sign">
+            🎤 SPEECH → ✋ SIGN
+          </button>
         </div>
 
-        <!-- Output Area -->
+        <!-- Output Area - Shows communication flow -->
         <div class="output-area">
-          <div class="output-header">
-            <span>COMMUNICATION</span>
-            <span id="modeIndicator">Sign to Speech</span>
-          </div>
-          <div id="outputText">Show signs or speak</div>
-          <div id="outputTranslation"></div>
-          <div id="confidenceScore"></div>
+          <div id="outputPhrase">Ready to communicate</div>
+          <div id="outputSign"></div>
+          <div id="statusMessage">⚡ Waiting for input...</div>
         </div>
 
         <!-- Action Buttons -->
         <div class="action-buttons">
           <button class="action-btn" id="cameraBtn" disabled>
-            <span>📷</span> Camera
+            📷 Start Camera
           </button>
           <button class="action-btn" id="micBtn" disabled>
-            <span>🎤</span> Microphone
+            🎤 Start Mic
           </button>
         </div>
 
@@ -599,23 +586,19 @@
         <div class="status-panel">
           <div class="status-item">
             <div class="status-label">CAMERA</div>
-            <div class="status-value" id="cameraStatus">
-              <span class="status-dot dot-inactive"></span> Off
-            </div>
+            <div class="status-value" id="cameraStatus"><span class="dot inactive"></span> Off</div>
           </div>
           <div class="status-item">
             <div class="status-label">MIC</div>
-            <div class="status-value" id="micStatus">
-              <span class="status-dot dot-inactive"></span> Off
-            </div>
+            <div class="status-value" id="micStatus"><span class="dot inactive"></span> Off</div>
           </div>
           <div class="status-item">
             <div class="status-label">MODE</div>
-            <div class="status-value" id="modeStatus">Sign→Speech</div>
+            <div class="status-value" id="modeStatus">✋→🗣️</div>
           </div>
           <div class="status-item">
-            <div class="status-label">LANGS</div>
-            <div class="status-value" id="langCount">0</div>
+            <div class="status-label">LIVE</div>
+            <div class="status-value" id="liveStatus"><span class="dot ready"></span> Ready</div>
           </div>
         </div>
       </div>
@@ -632,12 +615,10 @@
       <input type="email" id="authEmail" placeholder="Email">
       <input type="password" id="authPassword" placeholder="Password">
       <div style="display: flex; gap: 10px;">
-        <button class="btn btn-outline" id="modalCancel" style="flex: 1;">Cancel</button>
-        <button class="btn btn-primary" id="modalConfirm" style="flex: 1;">Continue</button>
+        <button class="btn btn-outline" id="modalCancel" style="flex:1">Cancel</button>
+        <button class="btn btn-primary" id="modalConfirm" style="flex:1">Continue</button>
       </div>
-      <div class="modal-footer" id="modalToggle" style="color: #64748b; text-align: center; margin-top: 20px; cursor: pointer;">
-        Don't have an account? Sign up
-      </div>
+      <div class="modal-footer" id="modalToggle">Don't have an account? Sign up</div>
     </div>
   </div>
 
@@ -664,6 +645,18 @@
     let recognition = null;
     let scene, camera3D, renderer, avatar;
 
+    // ========== PROFESSIONAL WELCOME HANDLER ==========
+    function showWelcome(email) {
+      const banner = document.getElementById('welcomeBanner');
+      banner.innerHTML = `👋 Welcome${email ? ' ' + email.split('@')[0] : ''}`;
+      banner.style.display = 'block';
+      
+      // Auto disappear after 3 seconds
+      setTimeout(() => {
+        banner.style.display = 'none';
+      }, 3000);
+    }
+
     // ========== ERROR HANDLING ==========
     const errorConsole = document.getElementById('errorConsole');
     
@@ -671,39 +664,22 @@
       const timestamp = new Date().toLocaleTimeString();
       const errorMsg = `[${timestamp}] ${message} ${error ? error.message : ''}`;
       console.error(errorMsg);
-      errorConsole.innerHTML = errorMsg;
+      errorConsole.innerHTML += errorMsg + '<br>';
       errorConsole.classList.add('show');
-      
-      setTimeout(() => {
-        errorConsole.classList.remove('show');
-      }, 5000);
+      setTimeout(() => errorConsole.classList.remove('show'), 5000);
     }
 
-    // ========== LANGUAGE DATABASE ==========
-    const worldLanguages = [
-      { code: 'en', name: 'English', sign: 'ASL' },
-      { code: 'sw', name: 'Swahili', sign: 'Swahili Sign' },
-      { code: 'es', name: 'Spanish', sign: 'LSE' },
-      { code: 'fr', name: 'French', sign: 'LSF' },
-      { code: 'de', name: 'German', sign: 'DGS' },
-      { code: 'zh', name: 'Chinese', sign: 'CSL' },
-      { code: 'ja', name: 'Japanese', sign: 'JSL' },
-      { code: 'ko', name: 'Korean', sign: 'KSL' },
-      { code: 'ar', name: 'Arabic', sign: 'ArSL' },
-      { code: 'hi', name: 'Hindi', sign: 'Indian Sign' },
-      { code: 'ru', name: 'Russian', sign: 'RSL' },
-      { code: 'pt', name: 'Portuguese', sign: 'LGP' },
-      { code: 'it', name: 'Italian', sign: 'LIS' },
-      { code: 'tr', name: 'Turkish', sign: 'TİD' }
-    ];
+    function logInfo(message) {
+      console.log(`[${timestamp}] ${message}`);
+    }
 
-    // ========== 3D AVATAR ==========
+    // ========== 3D AVATAR SETUP ==========
     function init3DAvatar() {
       try {
         const canvas = document.getElementById('avatarCanvas');
         
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0f1e);
+        scene.background = new THREE.Color(0x0a0f1f);
         
         camera3D = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
         camera3D.position.set(0, 1.5, 5);
@@ -724,7 +700,7 @@
         createAvatar();
         animate();
       } catch (error) {
-        logError('3D error:', error);
+        logError('3D initialization failed:', error);
       }
     }
 
@@ -751,12 +727,10 @@
       
       const leftArm = new THREE.Mesh(armGeo, armMat);
       leftArm.position.set(-0.8, 1.5, 0);
-      leftArm.rotation.z = 0.2;
       scene.add(leftArm);
       
       const rightArm = new THREE.Mesh(armGeo, armMat);
       rightArm.position.set(0.8, 1.5, 0);
-      rightArm.rotation.z = -0.2;
       scene.add(rightArm);
       
       // Hands
@@ -783,82 +757,65 @@
         // Universal sign language animation
         avatar.leftArm.rotation.x = Math.sin(time) * 0.3;
         avatar.rightArm.rotation.x = Math.cos(time) * 0.3;
-        avatar.head.rotation.y = Math.sin(time * 0.3) * 0.2;
+        avatar.leftHand.position.y = 1.0 + Math.sin(time * 2) * 0.1;
+        avatar.rightHand.position.y = 1.0 + Math.cos(time * 2) * 0.1;
         
         renderer.render(scene, camera3D);
       }
     }
 
-    // ========== POPULATE LANGUAGES ==========
-    function populateLanguages() {
-      const spokenGrid = document.getElementById('spokenLanguages');
-      const signGrid = document.getElementById('signLanguages');
-      
-      spokenGrid.innerHTML = '';
-      signGrid.innerHTML = '';
-      
-      worldLanguages.forEach(lang => {
-        // Spoken language
-        const spokenItem = document.createElement('div');
-        spokenItem.className = 'lang-item';
-        spokenItem.textContent = lang.name;
-        spokenItem.onclick = () => selectLanguage('spoken', lang.code, spokenItem);
-        spokenGrid.appendChild(spokenItem);
-        
-        // Sign language
-        const signItem = document.createElement('div');
-        signItem.className = 'lang-item';
-        signItem.textContent = lang.sign;
-        signItem.onclick = () => selectLanguage('sign', lang.sign, signItem);
-        signGrid.appendChild(signItem);
-      });
-      
-      // Select defaults
-      document.querySelectorAll('#spokenLanguages .lang-item')[0]?.classList.add('selected');
-      document.querySelectorAll('#signLanguages .lang-item')[0]?.classList.add('selected');
-      
-      document.getElementById('langCount').textContent = worldLanguages.length;
-    }
-
-    function selectLanguage(type, value, element) {
-      document.querySelectorAll(`#${type === 'spoken' ? 'spokenLanguages' : 'signLanguages'} .lang-item`).forEach(item => {
-        item.classList.remove('selected');
-      });
-      element.classList.add('selected');
-    }
-
-    // Filter languages
-    document.getElementById('searchSpoken').addEventListener('keyup', function() {
-      const search = this.value.toLowerCase();
-      document.querySelectorAll('#spokenLanguages .lang-item').forEach(item => {
-        item.style.display = item.textContent.toLowerCase().includes(search) ? 'block' : 'none';
-      });
-    });
-
-    document.getElementById('searchSign').addEventListener('keyup', function() {
-      const search = this.value.toLowerCase();
-      document.querySelectorAll('#signLanguages .lang-item').forEach(item => {
-        item.style.display = item.textContent.toLowerCase().includes(search) ? 'block' : 'none';
-      });
-    });
+    // ========== UNIVERSAL SIGN LANGUAGE DATABASE ==========
+    const signDatabase = {
+      // Common phrases in all languages
+      'hello': {
+        'ASL': '👋 (wave hand)',
+        'BSL': '🤚 (open hand)',
+        'Swahili Sign': '🤝 (handshake motion)',
+        'LSF': '✋ (raised hand)',
+        'DGS': '🖐️ (open palm)'
+      },
+      'thank you': {
+        'ASL': '👍 (thumb to chin)',
+        'BSL': '👌 (hand to mouth)',
+        'Swahili Sign': '🙏 (hands together)',
+        'LSF': '🤞 (two fingers)',
+        'DGS': '👏 (clap gesture)'
+      },
+      'help': {
+        'ASL': '🆘 (fist on palm)',
+        'BSL': '🤲 (open hands)',
+        'Swahili Sign': '🆘 (crossed arms)',
+        'LSF': '🆘 (hand up)',
+        'DGS': '🆘 (two hands)'
+      },
+      'how are you': {
+        'ASL': '👆 (point then circle)',
+        'BSL': '🤷 (shrug)',
+        'Swahili Sign': '🫂 (hug gesture)',
+        'LSF': '🤔 (thinking)',
+        'DGS': '👐 (open hands)'
+      }
+    };
 
     // ========== MODE CONTROL ==========
     document.getElementById('modeSign2Speech').addEventListener('click', function() {
-      document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
       this.classList.add('active');
       currentMode = 'sign2speech';
-      document.getElementById('modeIndicator').textContent = 'Sign to Speech';
-      document.getElementById('modeStatus').textContent = 'Sign→Speech';
-      document.getElementById('outputText').textContent = 'Show signs to camera';
+      document.getElementById('modeStatus').innerHTML = '✋→🗣️';
+      document.getElementById('outputPhrase').innerHTML = 'Show signs to camera';
+      document.getElementById('outputSign').innerHTML = '';
+      document.getElementById('statusMessage').innerHTML = '⚡ Waiting for signs...';
     });
 
     document.getElementById('modeSpeech2Sign').addEventListener('click', function() {
-      document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
       this.classList.add('active');
       currentMode = 'speech2sign';
-      document.getElementById('modeIndicator').textContent = 'Speech to Sign';
-      document.getElementById('modeStatus').textContent = 'Speech→Sign';
-      document.getElementById('outputText').textContent = 'Speak into microphone';
+      document.getElementById('modeStatus').innerHTML = '🎤→✋';
+      document.getElementById('outputPhrase').innerHTML = 'Speak now';
+      document.getElementById('outputSign').innerHTML = '';
+      document.getElementById('statusMessage').innerHTML = '⚡ Listening...';
     });
 
     // ========== CAMERA CONTROL ==========
@@ -871,38 +828,36 @@
           const stream = await navigator.mediaDevices.getUserMedia({ video: true });
           videoStream = stream;
           
-          // Show camera feed in canvas (simplified)
-          const video = document.createElement('video');
-          video.srcObject = stream;
-          video.play();
+          // Simple sign simulation for demo
+          setInterval(() => {
+            if (cameraActive && currentMode === 'sign2speech') {
+              const signs = ['hello', 'thank you', 'help', 'how are you'];
+              const randomSign = signs[Math.floor(Math.random() * signs.length)];
+              const signLang = document.getElementById('signLang').value;
+              
+              document.getElementById('outputPhrase').innerHTML = randomSign;
+              document.getElementById('outputSign').innerHTML = signDatabase[randomSign]?.[signLang] || '🫱 (sign detected)';
+              document.getElementById('liveCaption').innerHTML = `🤟 ${signDatabase[randomSign]?.[signLang] || randomSign}`;
+              document.getElementById('statusMessage').innerHTML = '⚡ Translating sign to speech...';
+            }
+          }, 3000);
           
           cameraActive = true;
           btn.classList.add('active');
-          btn.innerHTML = '<span>📷</span> Camera On';
-          status.innerHTML = '<span class="status-dot dot-active"></span> On';
-          document.getElementById('liveCaption').textContent = '🖐️ Camera active - Show signs';
-          
-          // Simulate sign detection
-          setTimeout(() => {
-            if (cameraActive) {
-              document.getElementById('outputText').textContent = 'Hello';
-              document.getElementById('outputTranslation').textContent = '🤟 Sign detected';
-              document.getElementById('confidenceScore').textContent = '⚡ 98% confidence';
-            }
-          }, 2000);
+          btn.innerHTML = '📷 Stop Camera';
+          status.innerHTML = '<span class="dot active"></span> On';
+          document.getElementById('liveCaption').innerHTML = '🤟 Camera active';
           
         } catch (error) {
           logError('Camera error:', error);
         }
       } else {
-        if (videoStream) {
-          videoStream.getTracks().forEach(track => track.stop());
-        }
+        if (videoStream) videoStream.getTracks().forEach(t => t.stop());
         cameraActive = false;
         btn.classList.remove('active');
-        btn.innerHTML = '<span>📷</span> Camera';
-        status.innerHTML = '<span class="status-dot dot-inactive"></span> Off';
-        document.getElementById('liveCaption').textContent = '🤟 Camera stopped';
+        btn.innerHTML = '📷 Start Camera';
+        status.innerHTML = '<span class="dot inactive"></span> Off';
+        document.getElementById('liveCaption').innerHTML = '🤟 Camera stopped';
       }
     }
 
@@ -920,41 +875,52 @@
         recognition = new webkitSpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.lang = 'en-US';
+        recognition.lang = document.getElementById('spokenLang').value === 'sw' ? 'sw-TZ' : 'en-US';
         
         recognition.onstart = () => {
           micActive = true;
           btn.classList.add('active');
-          btn.innerHTML = '<span>🎤</span> Mic On';
-          status.innerHTML = '<span class="status-dot dot-active"></span> On';
-          document.getElementById('liveCaption').textContent = '🎤 Listening...';
+          btn.innerHTML = '🎤 Stop Mic';
+          status.innerHTML = '<span class="dot active"></span> On';
+          document.getElementById('liveCaption').innerHTML = '🎤 Listening...';
         };
         
         recognition.onresult = (event) => {
           const transcript = Array.from(event.results)
-            .map(result => result[0].transcript)
-            .join(' ');
+            .map(r => r[0].transcript)
+            .join(' ')
+            .toLowerCase()
+            .trim();
           
-          document.getElementById('outputText').textContent = transcript;
-          document.getElementById('outputTranslation').textContent = '🖐️ Showing signs';
-          document.getElementById('liveCaption').textContent = `🎤 ${transcript}`;
+          document.getElementById('outputPhrase').innerHTML = transcript;
           
-          if (event.results[0][0].confidence) {
-            const confidence = Math.round(event.results[0][0].confidence * 100);
-            document.getElementById('confidenceScore').textContent = `⚡ ${confidence}% confidence`;
+          // Find matching sign
+          let foundSign = null;
+          for (const [word, signs] of Object.entries(signDatabase)) {
+            if (transcript.includes(word)) {
+              const signLang = document.getElementById('signLang').value;
+              foundSign = signs[signLang] || signs['ASL'];
+              document.getElementById('outputSign').innerHTML = foundSign;
+              document.getElementById('liveCaption').innerHTML = `🤟 ${foundSign}`;
+              break;
+            }
           }
+          
+          if (!foundSign) {
+            document.getElementById('outputSign').innerHTML = '🫱 (processing sign)';
+          }
+          
+          document.getElementById('statusMessage').innerHTML = '⚡ Translating speech to sign...';
         };
         
         recognition.start();
       } else {
-        if (recognition) {
-          recognition.stop();
-        }
+        if (recognition) recognition.stop();
         micActive = false;
         btn.classList.remove('active');
-        btn.innerHTML = '<span>🎤</span> Microphone';
-        status.innerHTML = '<span class="status-dot dot-inactive"></span> Off';
-        document.getElementById('liveCaption').textContent = '🤟 Microphone stopped';
+        btn.innerHTML = '🎤 Start Mic';
+        status.innerHTML = '<span class="dot inactive"></span> Off';
+        document.getElementById('liveCaption').innerHTML = '🤟 Microphone stopped';
       }
     }
 
@@ -967,14 +933,11 @@
     document.getElementById('modalCancel').addEventListener('click', closeAuthModal);
     document.getElementById('modalConfirm').addEventListener('click', handleAuth);
     document.getElementById('modalToggle').addEventListener('click', toggleAuthMode);
-    document.getElementById('dismissWelcome').addEventListener('click', () => {
-      document.getElementById('welcomeBanner').classList.remove('show');
-    });
 
     function openAuthModal(mode) {
       currentAuthMode = mode;
-      document.getElementById('modalTitle').textContent = mode === 'login' ? 'Login' : 'Sign Up';
-      document.getElementById('modalToggle').textContent = mode === 'login' ? 
+      document.getElementById('modalTitle').innerText = mode === 'login' ? 'Login' : 'Sign Up';
+      document.getElementById('modalToggle').innerText = mode === 'login' ? 
         "Don't have an account? Sign up" : "Already have an account? Login";
       document.getElementById('authModal').style.display = 'flex';
     }
@@ -990,6 +953,11 @@
     async function handleAuth() {
       const email = document.getElementById('authEmail').value;
       const password = document.getElementById('authPassword').value;
+      
+      if (!email || !password) {
+        alert('Please enter email and password');
+        return;
+      }
       
       try {
         if (currentAuthMode === 'login') {
@@ -1010,7 +978,6 @@
       const logoutBtn = document.getElementById('logoutBtn');
       const cameraBtn = document.getElementById('cameraBtn');
       const micBtn = document.getElementById('micBtn');
-      const welcomeBanner = document.getElementById('welcomeBanner');
       
       if (user) {
         loginBtn.style.display = 'none';
@@ -1018,15 +985,7 @@
         logoutBtn.style.display = 'inline-block';
         cameraBtn.disabled = false;
         micBtn.disabled = false;
-        
-        // Show welcome banner briefly
-        document.getElementById('welcomeMessage').textContent = 'Welcome to SIGNAID';
-        welcomeBanner.classList.add('show');
-        
-        // Auto-hide after 3 seconds
-        setTimeout(() => {
-          welcomeBanner.classList.remove('show');
-        }, 3000);
+        showWelcome(user.email);
       } else {
         loginBtn.style.display = 'inline-block';
         signupBtn.style.display = 'inline-block';
@@ -1043,7 +1002,11 @@
     // ========== INITIALIZATION ==========
     window.onload = () => {
       init3DAvatar();
-      populateLanguages();
+      
+      // Set initial state
+      document.getElementById('liveCaption').innerHTML = '🤟 Ready to assist';
+      document.getElementById('outputPhrase').innerHTML = 'Ready to communicate';
+      document.getElementById('statusMessage').innerHTML = '⚡ Login to start';
     };
 
     // ========== RESIZE HANDLER ==========
@@ -1056,23 +1019,14 @@
       }
     });
 
-    // ========== SERVICE WORKER - FIXED ==========
+    // ========== SERVICE WORKER ==========
     if ('serviceWorker' in navigator) {
-      // Try multiple paths for GitHub Pages compatibility
-      const swPaths = ['sw.js', './sw.js', '/signaid/sw.js'];
-      
-      function registerSW(path) {
-        navigator.serviceWorker.register(path)
-          .then(reg => console.log('SW registered:', path))
-          .catch(err => console.log('SW failed for path:', path));
+      // Don't register SW in development environments that block it
+      if (!window.location.hostname.includes('deepseeksvc')) {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('SW registered'))
+          .catch(err => console.log('SW optional:', err));
       }
-      
-      // Try the most likely path first
-      navigator.serviceWorker.register('sw.js').catch(() => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {
-          console.log('ServiceWorker not available - continuing without offline support');
-        });
-      });
     }
   </script>
 </body>
